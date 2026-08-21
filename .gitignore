@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+venv/
+backend/venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ---------------------------------------------------------------------------
+# Secrets — never commit real credentials.
+# backend/.env holds the JWT SECRET_KEY and DB password.
+# Commit backend/.env.example instead (checked in, placeholder values only).
+# ---------------------------------------------------------------------------
+.env
+*.env
+!*.env.example
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Large datasets — the UCI household power consumption file is ~133 MB,
+# well over GitHub's 100 MB per-file hard limit. It is a public dataset:
+# download instructions live in the README, and
+# backend/ml/training/prepare_public_dataset.py regenerates everything
+# downstream of it.
+# ---------------------------------------------------------------------------
+backend/ml/data/household_power_consumption.txt
+backend/ml/data/*.zip
+
+# Generated feature table — reproducible from the raw dataset above.
+backend/ml/data/training_rows.csv
+
+# NOTE: backend/ml/models/*.pkl is deliberately NOT ignored. The trained
+# model artifact is part of the submission deliverable so judges can run
+# predictions without retraining.
+
+# ---------------------------------------------------------------------------
+# Node / Next.js  (frontend/.gitignore covers these in more detail)
+# ---------------------------------------------------------------------------
+node_modules/
+.next/
+out/
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
