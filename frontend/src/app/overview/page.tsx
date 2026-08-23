@@ -7,7 +7,6 @@ import { clsx } from "clsx";
 
 import Shell from "@/components/Shell";
 import AlertBanner from "@/components/AlertBanner";
-import HeroScene from "@/components/HeroScene";
 import PhaseDial from "@/components/PhaseDial";
 import TrendChart from "@/components/TrendChart";
 import PowerGauge, { fullScaleFor } from "@/components/PowerGauge";
@@ -180,16 +179,18 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
       )}
 
       <div className="grid gap-4 xl:grid-cols-12">
-        {/* ===================== left: scene + anchor ===================== */}
-        <div className="flex flex-col gap-4 xl:col-span-4">
-          <div className="rise d1 flex-1">
-            <HeroScene
-              live={meterLive}
-              watts={telemetry?.active_power ?? null}
-              kwhCycle={kwhSoFar}
-              savingPct={savingPct}
-            />
+        {/* ============ left: open to the scene, panel at the foot ============ */}
+        <div className="flex min-h-[560px] flex-col justify-end gap-4 xl:col-span-4">
+          {/* A floating selector over the background, exactly as the reference
+              floats its turbine picker. Nothing boxes the scene in. */}
+          <div className="rise d1 flex items-start">
+            <span className="inline-flex items-center gap-2 rounded-[var(--r-pill)] panel-ink px-4 py-2.5 text-[12px] font-semibold text-on-dark">
+              <span className={clsx("h-1.5 w-1.5 rounded-full", meterLive ? "pulse-dot bg-accent" : "bg-on-dark-2")} />
+              {meterLive ? "Meter reporting" : "Meter not reporting"}
+            </span>
           </div>
+
+          <div className="flex-1" />
 
           <Card tone="ink" className="rise d2 p-6">
             <div className="flex items-start justify-between">

@@ -7,7 +7,8 @@ import { LayoutGrid, Wallet, ListChecks, LogOut, Settings } from "lucide-react";
 import { clsx } from "clsx";
 
 import Logo from "@/components/Logo";
-import { fetchIsOnline } from "@/lib/api";
+import SceneBackground from "@/components/SceneBackground";
+import { fetchIsOnline, fetchTelemetry, type TelemetryDashboard } from "@/lib/api";
 
 /**
  * Auth guard + chrome shared by every signed-in page.
@@ -41,6 +42,7 @@ export default function Shell({
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [scene, setScene] = useState<TelemetryDashboard | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -69,6 +71,12 @@ export default function Shell({
       } catch {
         if (!cancelled) setIsOnline(false);
       }
+      try {
+        const t = await fetchTelemetry(deviceId);
+        if (!cancelled) setScene(t);
+      } catch {
+        /* the scene keeps its last values; it is chrome, not a readout */
+      }
     };
     poll();
     const interval = setInterval(poll, 5000);
@@ -94,6 +102,15 @@ export default function Shell({
 
   return (
     <div className="min-h-screen">
+      {/* ONE scene behind the whole app — fixed, full-bleed, shared by every
+          route. The cards float on it. This is the structure the reference
+          uses: a photograph as the page background, not a picture in a tile. */}
+      <SceneBackground
+        live={isOnline}
+        watts={scene?.active_power ?? null}
+        kwhCycle={scene?.month_energy_kwh ?? null}
+        savingPct={null}
+      />
       <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5 sm:pt-5">
         <div className="mx-auto flex max-w-[1560px] items-center justify-between gap-3 rounded-[var(--r-pill)] glass-strong px-3 py-2.5">
           <Link href="/overview" className="shrink-0 pl-0.5">

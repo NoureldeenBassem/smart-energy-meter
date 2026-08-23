@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Zap, Wifi, CheckCircle2, XCircle } from "lucide-react";
 
+import SceneBackground from "@/components/SceneBackground";
 import { registerDevice, waitForDeviceOnline } from "@/lib/device";
 
 /**
@@ -39,7 +40,8 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center  p-6">
+    <div className="grid min-h-screen place-items-center p-6">
+      <SceneBackground live watts={820} kwhCycle={412} savingPct={12} />
       <div className="w-full max-w-md">
         <div className="rounded-[var(--r-card)] glass p-8 text-center ">
           {step === "intro" && (

@@ -22,8 +22,8 @@
   --sky-4: #8698b4;
 
   /* frosted glass */
-  --glass: rgba(255, 255, 255, 0.58);
-  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass: rgba(255, 255, 255, 0.66);
+  --glass-strong: rgba(255, 255, 255, 0.8);
   --glass-soft: rgba(255, 255, 255, 0.34);
   --glass-line: rgba(255, 255, 255, 0.66);
   --glass-shadow: 0 2px 8px rgba(30, 41, 59, 0.06), 0 18px 40px -20px rgba(30, 41, 59, 0.34);
@@ -101,30 +101,7 @@ body {
   color: var(--ink);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(120% 90% at 8% -10%, rgba(255, 255, 255, 0.85) 0%, transparent 52%),
-    radial-gradient(90% 70% at 92% 4%, rgba(227, 236, 74, 0.14) 0%, transparent 46%),
-    radial-gradient(120% 120% at 50% 120%, var(--sky-4) 0%, transparent 58%),
-    linear-gradient(168deg, var(--sky-1) 0%, var(--sky-2) 44%, var(--sky-3) 100%);
-  background-attachment: fixed;
-}
-
-/* Slow atmospheric drift. Large, cheap, and behind everything. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: -20%;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(38% 30% at 22% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 70%),
-    radial-gradient(30% 26% at 74% 62%, rgba(255, 255, 255, 0.34) 0%, transparent 70%);
-  animation: drift 34s ease-in-out infinite alternate;
-}
-
-@keyframes drift {
-  from { transform: translate3d(-2%, -1%, 0) scale(1); }
-  to   { transform: translate3d(3%, 2%, 0) scale(1.06); }
+  background: var(--sky-2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -136,21 +113,18 @@ body::before {
   background: var(--glass);
   border: 1px solid var(--glass-line);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  @apply backdrop-blur-xl backdrop-saturate-150;
 }
 .glass-strong {
   background: var(--glass-strong);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  @apply backdrop-blur-2xl backdrop-saturate-150;
 }
 .glass-soft {
   background: var(--glass-soft);
   border: 1px solid rgba(255, 255, 255, 0.44);
-  backdrop-filter: blur(12px) saturate(130%);
-  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  @apply backdrop-blur-lg backdrop-saturate-150;
 }
 .panel-ink {
   background: linear-gradient(158deg, var(--ink-panel-2) 0%, var(--ink-panel) 62%);
