@@ -63,3 +63,11 @@ out/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------------------------------------------------------------------------
+# Design canvas: the .dc.html artboards and canvas.json ARE the source and are
+# committed. The seeded output is a ~2 MB generated bundle rebuilt from them on
+# every change, so it is not.
+# ---------------------------------------------------------------------------
+design/*.html
+!design/*.dc.html

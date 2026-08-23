@@ -1,0 +1,24 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Overview", "x": 0, "y": 0, "w": 1440, "h": 980 },
+    { "file": "BudgetPlanner.dc.html", "title": "Budget Planner", "x": 1540, "y": 0, "w": 1440, "h": 980 },
+    { "file": "Recommendations.dc.html", "title": "Recommendations", "x": 3080, "y": 0, "w": 1440, "h": 980 }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -190,
+      "w": 460,
+      "text": "Metermind — smart energy meter dashboard\n\nTokens lifted from the live app: accent #e3ec4a (fills only, never text on light), glass rgba(255,255,255,0.66), charcoal panels #2b2f37, 22px radii, Geist + Geist Mono.\n\nSample values are representative: 888 EGP predicted against a 900 EGP target, 426.6 kWh this cycle, day 24 of 31."
+    },
+    {
+      "id": "hardware-note",
+      "x": 1540,
+      "y": -190,
+      "w": 420,
+      "text": "The panel scene is drawn, not photographed — it themes with the rest of the design and can react to live meter state, which a photo cannot.\n\nCallouts name only parts that are in the bill of materials."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

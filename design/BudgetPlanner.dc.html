@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: Geist, "Segoe UI", system-ui, sans-serif; }
+    a { color: #5c6400; text-decoration: none; }
+    a:hover { color: #21262d; }
+    .num { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 1440px; height: 980px; overflow: hidden; background: linear-gradient(168deg, #d7e0ec 0%, #b9c8dc 46%, #93a3bd 100%);">
+
+  <div style="position: absolute; inset: 0; background: radial-gradient(90% 70% at 14% 4%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 58%), linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 28%, rgba(226,233,243,0.42) 56%, rgba(226,233,243,0.54) 100%);"></div>
+
+  <!-- nav -->
+  <div style="position: absolute; top: 20px; left: 20px; right: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 999px; background: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(30,41,59,0.06), 0 18px 40px -20px rgba(30,41,59,0.34);">
+    <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+      <svg width="38" height="38" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="24" fill="#e3ec4a"></circle>
+        <path d="M12.5 31.5 A 14 14 0 1 1 35.5 31.5" fill="none" stroke="#22262d" stroke-width="3" stroke-linecap="round" opacity="0.9"></path>
+        <path d="M26.6 11.5 L17.6 25.4 h5.3 l-1.6 11.1 9.1 -14.2 h-5.4 z" fill="#22262d"></path>
+      </svg>
+      <span style="font-size: 15px; font-weight: 600; color: #21262d;">Metermind</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 2px;">
+      <span style="padding: 10px 16px; font-size: 13px; font-weight: 500; color: #3d4650;">Overview</span>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 6px 20px 6px 6px; border-radius: 999px; background: #2b2f37; box-shadow: 0 4px 10px rgba(17,21,27,0.28);">
+        <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: rgba(255,255,255,0.12);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e3ec4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+        </span>
+        <span style="font-size: 13px; font-weight: 600; color: #f1f4f8;">Budget Planner</span>
+      </div>
+      <span style="padding: 10px 16px; font-size: 13px; font-weight: 500; color: #3d4650;">Recommendations</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+      <span style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #e3ec4a;">
+        <span style="width: 6px; height: 6px; border-radius: 999px; background: #2b2f37;"></span>
+        <span style="font-size: 11px; font-weight: 700; color: #2b2f37;">Live</span>
+      </span>
+      <span style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: #2b2f37;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f1f4f8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </span>
+    </div>
+  </div>
+
+  <!-- heading -->
+  <div style="position: absolute; top: 108px; left: 20px; display: flex; align-items: center; gap: 14px;">
+    <span style="display: grid; place-items: center; width: 46px; height: 46px; border-radius: 999px; background: #e3ec4a;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2b2f37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+    </span>
+    <div>
+      <div style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: #21262d;">Budget Planner</div>
+      <div style="margin-top: 2px; font-size: 14px; color: #5c6673;">Pick the bill you want at cycle end. The tariff engine works backwards to the kWh that produces it.</div>
+    </div>
+  </div>
+
+  <!-- left: input -->
+  <div style="position: absolute; top: 200px; left: 20px; width: 460px; padding: 26px; border-radius: 22px; background: rgba(255,255,255,0.66); border: 1px solid rgba(255,255,255,0.66); box-shadow: 0 2px 8px rgba(30,41,59,0.06), 0 18px 40px -20px rgba(30,41,59,0.34);">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #5c6673;">TARGET MONTHLY BILL</div>
+    <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+      <div class="num" style="flex-grow: 1; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.6); font-size: 30px; font-weight: 700; color: #21262d;">900</div>
+      <span style="font-size: 14px; font-weight: 700; color: #5c6673;">EGP</span>
+    </div>
+
+    <div style="margin-top: 22px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #5c6673;">ALERT ME AT</div>
+    <div style="margin-top: 10px; display: flex; gap: 8px;">
+      <span class="num" style="flex-grow: 1; text-align: center; padding: 9px 0; border-radius: 999px; background: rgba(255,255,255,0.5); font-size: 14px; font-weight: 700; color: #5c6673;">75%</span>
+      <span class="num" style="flex-grow: 1; text-align: center; padding: 9px 0; border-radius: 999px; background: #2b2f37; font-size: 14px; font-weight: 700; color: #f1f4f8;">85%</span>
+      <span class="num" style="flex-grow: 1; text-align: center; padding: 9px 0; border-radius: 999px; background: rgba(255,255,255,0.5); font-size: 14px; font-weight: 700; color: #5c6673;">90%</span>
+    </div>
+    <div style="margin-top: 8px; font-size: 12px; color: #5c6673;">Percentage of the allowance at which the banner appears.</div>
+
+    <div style="margin-top: 22px; text-align: center; padding: 15px 0; border-radius: 999px; background: #2b2f37; font-size: 14px; font-weight: 700; color: #f1f4f8;">Save as my budget</div>
+    <div class="num" style="margin-top: 12px; font-size: 12px; color: #5c6673;">Currently saved target: 900 EGP</div>
+  </div>
+
+  <!-- right: allowance -->
+  <div style="position: absolute; top: 200px; left: 500px; right: 20px; padding: 28px; border-radius: 22px; background: rgba(255,255,255,0.66); border: 1px solid rgba(255,255,255,0.66); box-shadow: 0 2px 8px rgba(30,41,59,0.06), 0 18px 40px -20px rgba(30,41,59,0.34);">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+      <div>
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #5c6673;">ALLOWED CONSUMPTION</div>
+        <div style="margin-top: 12px; display: flex; align-items: baseline; gap: 10px;">
+          <span class="num" style="font-size: 56px; font-weight: 700; line-height: 1; color: #5c6400;">554.4</span>
+          <span style="font-size: 18px; font-weight: 600; color: #5c6673;">kWh</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 14px; color: #5c6673;">for the whole billing cycle</div>
+      </div>
+      <div style="display: flex; gap: 14px;">
+        <div style="padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.5); min-width: 132px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #5c6673;">LANDS IN BRACKET</div>
+          <div class="num" style="margin-top: 5px; font-size: 21px; font-weight: 700; color: #21262d;">#5</div>
+          <div style="margin-top: 2px; font-size: 11px; color: #5c6673;">2.18 EGP per extra kWh</div>
+        </div>
+        <div style="padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.5); min-width: 132px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #5c6673;">DAILY AVERAGE</div>
+          <div class="num" style="margin-top: 5px; font-size: 21px; font-weight: 700; color: #21262d;">17.88</div>
+          <div style="margin-top: 2px; font-size: 11px; color: #5c6673;">over a 31-day cycle</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 22px; display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.5);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c6400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="12" y1="14" x2="12" y2="14"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="8" y1="18" x2="8" y2="18"></line></svg>
+      <div style="font-size: 12px; line-height: 1.6; color: #5c6673;">Charging <span class="num" style="font-weight: 700; color: #21262d;">554.358 kWh</span> through the tariff gives <span class="num" style="font-weight: 700; color: #5c6400;">900.00 EGP</span>, against a 900.00 EGP target — the inverse and the forward function agree.</div>
+    </div>
+
+    <div style="margin-top: 22px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.5);">
+      <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #5c6673;">AGAINST THIS CYCLE</div>
+      <div style="margin-top: 12px; display: flex; align-items: baseline; justify-content: space-between;">
+        <span class="num" style="font-size: 13px; color: #5c6673;">426.6 kWh used of 554.4 allowed</span>
+        <span class="num" style="font-size: 13px; font-weight: 700; color: #5c6400;">76.9%</span>
+      </div>
+      <div style="margin-top: 8px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.5); overflow: hidden;">
+        <div style="height: 100%; width: 76.9%; border-radius: 999px; background: #e3ec4a;"></div>
+      </div>
+      <div style="margin-top: 12px; font-size: 14px; color: #2b7a52;">The current forecast of <span class="num" style="font-weight: 700;">548.8 kWh</span> comes in <span class="num" style="font-weight: 700;">5.6 kWh</span> under this target.</div>
+    </div>
+  </div>
+
+  <!-- bracket table -->
+  <div style="position: absolute; top: 620px; left: 500px; right: 20px; padding: 26px 28px; border-radius: 22px; background: rgba(255,255,255,0.66); border: 1px solid rgba(255,255,255,0.66); box-shadow: 0 2px 8px rgba(30,41,59,0.06), 0 18px 40px -20px rgba(30,41,59,0.34);">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #5c6673;">WHY IT IS NOT A FLAT RATE</div>
+    <div style="margin-top: 8px; max-width: 62ch; font-size: 13px; line-height: 1.6; color: #5c6673;">Egypt's residential tariff is progressive: each bracket's rate applies only to the slice of consumption inside it, so doubling the target bill does not double the kWh it buys.</div>
+
+    <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 2px;">
+      <div style="display: grid; grid-template-columns: 80px 1fr 120px; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.6); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #5c6673;">
+        <span>BRACKET</span><span>KWH RANGE</span><span style="text-align: right;">EGP / KWH</span>
+      </div>
+      <sc-for list="{{ brackets }}" as="b" hint-placeholder-count="7">
+        <div class="num" style="display: grid; grid-template-columns: 80px 1fr 120px; gap: 12px; padding: 7px 0; font-size: 13px; color: {{ b.fg }}; font-weight: {{ b.weight }}; background: {{ b.bg }}; border-radius: 8px;">
+          <span style="padding-left: 8px;">{{ b.n }}</span><span>{{ b.range }}</span><span style="text-align: right; padding-right: 8px;">{{ b.price }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- left lower: what the target buys -->
+  <div style="position: absolute; top: 620px; left: 20px; width: 460px; padding: 26px; border-radius: 22px; background: linear-gradient(158deg, #363b44 0%, #2b2f37 62%); border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 18px 44px -18px rgba(17,21,27,0.62);">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #9aa5b4;">THE TRADE, IN ONE LINE</div>
+    <div style="margin-top: 14px; font-size: 19px; line-height: 1.5; font-weight: 600; color: #f1f4f8;">10× the bill buys only about <span style="color: #e3ec4a;">5×</span> the electricity.</div>
+    <div style="margin-top: 12px; font-size: 13px; line-height: 1.6; color: #9aa5b4;">That is the progressive tariff working. Every extra kWh is charged in a costlier slice than the one before it, so the last units of the month are the expensive ones — and the cheapest saving available is the one made before you cross into the next bracket.</div>
+
+    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+      <sc-for list="{{ tradeRows }}" as="t" hint-placeholder-count="3">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span class="num" style="font-size: 13px; color: #9aa5b4;">{{ t.bill }}</span>
+          <span class="num" style="font-size: 14px; font-weight: 700; color: #f1f4f8;">{{ t.kwh }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#e3ec4a","options":["#e3ec4a","#7dd3fc","#fbbf24","#a3e635"],"section":"Theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#e3ec4a';
+    const rows = [
+      { n: '1', range: '0 – 50', price: '0.68' },
+      { n: '2', range: '50 – 100', price: '0.95' },
+      { n: '3', range: '100 – 200', price: '1.15' },
+      { n: '4', range: '200 – 350', price: '1.72' },
+      { n: '5', range: '350 – 650', price: '2.18' },
+      { n: '6', range: '650 – 1000', price: '2.40' },
+      { n: '7', range: '1000 – above', price: '2.74' },
+    ];
+    return {
+      accent,
+      brackets: rows.map((r) => ({
+        ...r,
+        bg: r.n === '5' ? 'rgba(227,236,74,0.22)' : 'transparent',
+        fg: r.n === '5' ? '#5c6400' : '#3d4650',
+        weight: r.n === '5' ? '700' : '500',
+      })),
+      tradeRows: [
+        { bill: '200 EGP', kwh: '202.0 kWh' },
+        { bill: '900 EGP', kwh: '554.4 kWh' },
+        { bill: '2000 EGP', kwh: '1018.8 kWh' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
