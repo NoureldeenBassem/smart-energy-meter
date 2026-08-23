@@ -12,9 +12,14 @@ import {
   Power,
   TriangleAlert,
 } from "lucide-react";
+import { clsx } from "clsx";
 
 import Shell from "@/components/Shell";
 import AlertBanner from "@/components/AlertBanner";
+import { Card } from "@/components/ui/Card";
+import { StatTile } from "@/components/ui/StatTile";
+import { ThresholdBar } from "@/components/ui/ThresholdBar";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
   MODES,
   MODE_LABELS,
@@ -38,44 +43,42 @@ import {
  *
  * The lock is a faithful picture of the backend, not a UI convention layered on
  * top: there is no request this screen could send that would reduce that number.
- * `priority` is deliberately NOT drawn as protection - a High-priority
+ * `priority` is deliberately NOT drawn as protection — a High-priority
  * non-essential appliance gets trimmed like any other, and showing the two the
  * same way is the exact conflation that made the guarantee fake in the first place.
+ *
+ * Essentials render on the dark surface and adjustable appliances on the light
+ * one, so the two groups are separable before any label is read.
  */
 
 const STATUS_STYLES: Record<
   AllocationStatus,
-  { label: string; row: string; chip: string; icon: React.ReactNode }
+  { label: string; chip: string; icon: React.ReactNode }
 > = {
   essential: {
     label: "Locked",
-    row: "border-emerald-900/60 bg-emerald-950/20",
-    chip: "bg-emerald-950 text-emerald-300 border-emerald-800",
-    icon: <Lock className="h-3 w-3" />,
+    chip: "bg-accent/15 text-accent border-accent/30",
+    icon: <Lock className="h-3 w-3" aria-hidden />,
   },
   optimal: {
     label: "Full runtime",
-    row: "border-slate-800 bg-slate-950/60",
-    chip: "bg-slate-900 text-slate-300 border-slate-700",
-    icon: <CheckCircle2 className="h-3 w-3" />,
+    chip: "bg-surface-muted text-ink-soft border-line",
+    icon: <CheckCircle2 className="h-3 w-3" aria-hidden />,
   },
   constrained: {
     label: "Reduced",
-    row: "border-amber-900/50 bg-amber-950/20",
-    chip: "bg-amber-950 text-amber-300 border-amber-800",
-    icon: <TriangleAlert className="h-3 w-3" />,
+    chip: "bg-accent-wash text-accent-deep border-accent-deep/25",
+    icon: <TriangleAlert className="h-3 w-3" aria-hidden />,
   },
   shed: {
     label: "Skip today",
-    row: "border-rose-900/50 bg-rose-950/20",
-    chip: "bg-rose-950 text-rose-300 border-rose-900",
-    icon: <Ban className="h-3 w-3" />,
+    chip: "bg-warn-wash text-warn border-warn/25",
+    icon: <Ban className="h-3 w-3" aria-hidden />,
   },
   away: {
     label: "Off (away)",
-    row: "border-slate-800 bg-slate-950/40",
-    chip: "bg-slate-900 text-slate-400 border-slate-700",
-    icon: <Moon className="h-3 w-3" />,
+    chip: "bg-surface-muted text-ink-muted border-line",
+    icon: <Moon className="h-3 w-3" aria-hidden />,
   },
 };
 
@@ -108,129 +111,164 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="h-7 w-7 animate-spin text-accent-deep" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-xl border border-rose-900/60 bg-rose-950/25 p-5 text-sm text-rose-200">
+      <Card className="border border-warn/25 bg-warn-wash p-5 text-sm text-warn">
         {error}
         <div className="mt-3">
           <Link
             href="/budget"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface-ink px-3.5 py-2 text-xs font-semibold text-ink-onDark transition hover:opacity-90"
           >
             Set a target bill <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-      </div>
+      </Card>
     );
   }
 
   const essentials = data?.allocations.filter((a) => a.is_essential) ?? [];
   const discretionary = data?.allocations.filter((a) => !a.is_essential) ?? [];
+  const planTotal = data?.total_allocated_kwh ?? 0;
 
   return (
-    <>
+    <div className="space-y-8">
       <AlertBanner alert={data?.alert} daysRemaining={data?.days_remaining_in_month} />
 
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white">
-          <Power className="h-6 w-6 text-indigo-400" />
-          Today&apos;s plan
-        </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          How long to run each appliance to stay inside the budget. Essential
-          appliances are reserved first and are never reduced.
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight text-ink">Today&apos;s plan</h1>
+        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
+          How long to run each appliance to stay inside the budget. Essential appliances
+          are reserved first and are never reduced.
         </p>
       </div>
 
-      {/* Mode switcher */}
-      <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
+      {/* Mode switcher — same pill vocabulary as the top nav, so "selected" reads
+          the same way in both places. */}
+      <Card className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
             Household mode
           </span>
-          {switching && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />}
+          {switching && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink-muted" />}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div
+          role="group"
+          aria-label="Household mode"
+          className="flex flex-wrap gap-2 rounded-[var(--radius-pill)] bg-surface-muted p-1.5"
+        >
           {MODES.map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setMode(m)}
               aria-pressed={mode === m}
-              className={`rounded-lg border py-2 text-sm font-semibold transition ${
+              className={clsx(
+                "flex-1 whitespace-nowrap rounded-[var(--radius-pill)] px-4 py-2 text-sm font-semibold transition",
                 mode === m
-                  ? "border-emerald-500 bg-emerald-600 text-white"
-                  : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-600"
-              }`}
+                  ? "bg-surface-ink text-ink-onDark shadow-sm"
+                  : "text-ink-muted hover:text-ink",
+              )}
             >
               {MODE_LABELS[m]}
             </button>
           ))}
         </div>
-        <p className="mt-2.5 text-xs text-slate-500">
+        <p className="mt-3 text-xs leading-relaxed text-ink-muted">
           Mode scales only the discretionary allowance. Even in{" "}
-          <span className="font-semibold text-slate-400">Away</span>, which drops it to
+          <span className="font-semibold text-ink-soft">Away</span>, which drops it to
           zero, essential appliances keep their full runtime.
         </p>
-      </div>
+      </Card>
 
       {data && (
         <>
           {/* Budget split */}
-          <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Tile
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatTile
               label="Budget for today"
               value={data.budget_daily_kwh.toFixed(2)}
               unit="kWh"
-              note={`${data.daily_kwh_allowance.toFixed(1)} kWh left over ${data.days_remaining_in_month}d`}
+              sub={`${data.daily_kwh_allowance.toFixed(1)} kWh left over ${data.days_remaining_in_month}d`}
             />
-            <Tile
+            <StatTile
               label="Reserved for essentials"
               value={data.essential_kwh.toFixed(2)}
               unit="kWh"
-              accent="text-emerald-300"
-              note="Taken off the top, before anything else"
+              sub="Taken off the top, before anything else"
+              emphasis
             />
-            <Tile
+            <StatTile
               label="Discretionary pool"
               value={data.discretionary_kwh_allowance.toFixed(2)}
               unit="kWh"
-              note={`${MODE_LABELS[data.active_mode]} mode`}
+              sub={`${MODE_LABELS[data.active_mode]} mode`}
             />
-            <Tile
+            <StatTile
               label="Total planned"
               value={data.total_allocated_kwh.toFixed(2)}
               unit="kWh"
-              accent={data.within_budget ? "text-white" : "text-amber-300"}
-              note={data.within_budget ? "Within budget" : "Over budget - see note below"}
+              sub={data.within_budget ? "Within budget" : "Over budget — see note below"}
             />
           </div>
 
           {!data.within_budget && data.budget_note && (
-            <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-900/60 bg-amber-950/25 p-4">
-              <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+            <Card className="flex items-start gap-3 border border-warn/25 bg-warn-wash p-4">
+              <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-warn" aria-hidden />
               <div>
-                <p className="text-sm font-semibold text-amber-200">
+                <p className="text-sm font-bold text-warn">
                   This plan does not fit the target
                 </p>
-                <p className="mt-1 text-sm text-slate-300">{data.budget_note}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                  {data.budget_note}
+                </p>
               </div>
-            </div>
+            </Card>
+          )}
+
+          {/* Share of today's plan — the reference's threshold rows, applied to
+              appliances. Proportion of the fetched total; no energy is recomputed. */}
+          {data.allocations.length > 0 && planTotal > 0 && (
+            <Card className="p-5">
+              <SectionHeading
+                title="Share of today's plan"
+                subtitle="How the day's planned energy divides across the household"
+              />
+              <div className="space-y-3.5">
+                {[...data.allocations]
+                  .sort((a, b) => b.estimated_kwh - a.estimated_kwh)
+                  .map((a) => (
+                    <ThresholdBar
+                      key={a.appliance_id}
+                      label={a.name}
+                      valueText={`${a.estimated_kwh.toFixed(2)} kWh`}
+                      fraction={a.estimated_kwh / planTotal}
+                      state={
+                        a.is_essential
+                          ? "active"
+                          : a.status === "shed" || a.status === "away"
+                            ? "muted"
+                            : "normal"
+                      }
+                    />
+                  ))}
+              </div>
+            </Card>
           )}
 
           {/* Essentials */}
           {essentials.length > 0 && (
-            <section className="mb-6">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-200">
-                <Lock className="h-4 w-4 text-emerald-400" />
-                Essential - protected
-                <span className="rounded-full border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+            <section>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
+                <Lock className="h-4 w-4 text-accent-deep" aria-hidden />
+                Essential — protected
+                <span className="num rounded-[var(--radius-pill)] bg-accent-wash px-2 py-0.5 text-[11px] font-bold text-accent-deep">
                   {essentials.length}
                 </span>
               </h2>
@@ -244,20 +282,20 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
 
           {/* Discretionary */}
           <section>
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-200">
-              <Power className="h-4 w-4 text-slate-400" />
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
+              <Power className="h-4 w-4 text-ink-muted" aria-hidden />
               Adjustable
               {discretionary.length > 0 && (
-                <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-slate-400">
+                <span className="num rounded-[var(--radius-pill)] bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-ink-muted">
                   {discretionary.length}
                 </span>
               )}
             </h2>
             {discretionary.length === 0 ? (
-              <p className="rounded-xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-500">
+              <Card className="p-5 text-sm text-ink-muted">
                 Every registered appliance is marked essential, so there is nothing left
                 for the allocator to trade off.
-              </p>
+              </Card>
             ) : (
               <div className="space-y-2.5">
                 {discretionary.map((a) => (
@@ -268,31 +306,42 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
           </section>
         </>
       )}
-    </>
+    </div>
   );
 }
 
 function AllocationRow({ allocation: a }: { allocation: Allocation }) {
   const style = STATUS_STYLES[a.status] ?? STATUS_STYLES.optimal;
+  const onInk = a.is_essential;
 
   return (
-    <div className={`rounded-xl border p-4 ${style.row}`}>
+    <Card tone={onInk ? "ink" : "light"} className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {a.is_essential ? (
             <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-800 bg-emerald-950"
-              title="Essential - never restricted by the allocator"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15"
+              title="Essential — never restricted by the allocator"
             >
-              <Lock className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
+              <Lock className="h-3.5 w-3.5 text-accent" aria-hidden />
               <span className="sr-only">Essential, never restricted</span>
             </span>
           ) : (
             <span className="h-7 w-7 shrink-0" aria-hidden />
           )}
-          <span className="truncate font-semibold text-white">{a.name}</span>
           <span
-            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${style.chip}`}
+            className={clsx(
+              "truncate font-bold",
+              onInk ? "text-ink-onDark" : "text-ink",
+            )}
+          >
+            {a.name}
+          </span>
+          <span
+            className={clsx(
+              "inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+              style.chip,
+            )}
           >
             {style.icon}
             {style.label}
@@ -300,55 +349,59 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
         </div>
 
         <div className="text-right">
-          <span className="text-lg font-bold text-white">
+          <span
+            className={clsx(
+              "num text-xl font-bold",
+              onInk ? "text-ink-onDark" : "text-ink",
+            )}
+          >
             {a.recommended_runtime_hours}
           </span>
-          <span className="ml-1 text-xs text-slate-400">h/day</span>
-          <p className="text-xs text-slate-500">{a.estimated_kwh.toFixed(2)} kWh</p>
+          <span
+            className={clsx(
+              "ml-1 text-xs font-semibold",
+              onInk ? "text-ink-onDark-muted" : "text-ink-muted",
+            )}
+          >
+            h/day
+          </span>
+          <p
+            className={clsx(
+              "num text-xs",
+              onInk ? "text-ink-onDark-muted" : "text-ink-muted",
+            )}
+          >
+            {a.estimated_kwh.toFixed(2)} kWh
+          </p>
         </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-        <span className="font-mono">{a.rated_power_w} W</span>
-        <span className="text-slate-600">|</span>
-        {/* priority is shown as what it is - an ordering among adjustable appliances
-            only - so it is never mistaken for the protection the padlock means. */}
+      <div
+        className={clsx(
+          "mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs",
+          onInk ? "text-ink-onDark-muted" : "text-ink-muted",
+        )}
+      >
+        <span className="num">{a.rated_power_w} W</span>
+        <span aria-hidden className={onInk ? "text-white/25" : "text-line"}>
+          |
+        </span>
+        {/* priority is shown as what it is — an ordering among adjustable appliances
+            only — so it is never mistaken for the protection the padlock means. */}
         <span>
-          {a.is_essential
-            ? "Protected regardless of priority"
-            : `${a.priority} priority`}
+          {a.is_essential ? "Protected regardless of priority" : `${a.priority} priority`}
         </span>
       </div>
 
-      <p className="mt-1.5 text-sm text-slate-300">{a.action_note}</p>
-    </div>
-  );
-}
-
-function Tile({
-  label,
-  value,
-  unit,
-  note,
-  accent = "text-white",
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  note?: string;
-  accent?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        {label}
+      <p
+        className={clsx(
+          "mt-1.5 text-sm",
+          onInk ? "text-ink-onDark" : "text-ink-soft",
+        )}
+      >
+        {a.action_note}
       </p>
-      <div className="mt-1.5 flex items-baseline gap-1.5">
-        <span className={`text-2xl font-bold ${accent}`}>{value}</span>
-        <span className="text-xs text-slate-400">{unit}</span>
-      </div>
-      {note && <p className="mt-1 text-xs text-slate-500">{note}</p>}
-    </div>
+    </Card>
   );
 }
 

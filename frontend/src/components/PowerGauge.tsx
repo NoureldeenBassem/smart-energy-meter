@@ -68,14 +68,17 @@ export default function PowerGauge({
   const fraction =
     value === null ? 0 : Math.min(Math.max(value / fullScaleWatts, 0), 1);
 
+  // On the dark hero card. The accent carries the normal band; the two upper
+  // bands keep distinct hues because they are a STATUS, not styling — a load
+  // near the household's connected total is worth seeing at a glance.
   const colour =
     value === null || stale
       ? "#64748b"
       : fraction >= 0.75
-        ? "#fb7185"
+        ? "#f0776f"
         : fraction >= 0.5
-          ? "#fbbf24"
-          : "#34d399";
+          ? "#f2b53c"
+          : "#dce531";
 
   const [nx1, ny1] = polar(fraction, R - 21);
   const [nx2, ny2] = polar(fraction, R + 8);
@@ -84,7 +87,7 @@ export default function PowerGauge({
     <div className="flex flex-col items-center">
       <svg
         viewBox="0 0 200 190"
-        className="w-full max-w-[280px]"
+        className="w-full max-w-[300px]"
         role="img"
         aria-label={
           value === null
@@ -103,7 +106,7 @@ export default function PowerGauge({
               y1={ty1}
               x2={tx2}
               y2={ty2}
-              stroke="#334155"
+              stroke="#3a4756"
               strokeWidth={2}
               strokeLinecap="round"
             />
@@ -114,7 +117,7 @@ export default function PowerGauge({
         <path
           d={ARC_PATH}
           fill="none"
-          stroke="#1e293b"
+          stroke="#273140"
           strokeWidth={13}
           strokeLinecap="round"
         />
@@ -152,8 +155,8 @@ export default function PowerGauge({
           x={CX}
           y={CY + 4}
           textAnchor="middle"
-          className="fill-white"
-          style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.02em" }}
+          className="num fill-white"
+          style={{ fontSize: 40, fontWeight: 700 }}
         >
           {value === null ? "--" : value.toFixed(0)}
         </text>
@@ -161,7 +164,7 @@ export default function PowerGauge({
           x={CX}
           y={CY + 26}
           textAnchor="middle"
-          className="fill-slate-400"
+          className="fill-[#93a0b4]"
           style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.14em" }}
         >
           WATTS
@@ -172,7 +175,7 @@ export default function PowerGauge({
           x={X0 - 1}
           y={Y0 + 21}
           textAnchor="middle"
-          className="fill-slate-500"
+          className="fill-[#7c8a9c]"
           style={{ fontSize: 11 }}
         >
           0
@@ -181,7 +184,7 @@ export default function PowerGauge({
           x={X1 + 1}
           y={Y1 + 21}
           textAnchor="middle"
-          className="fill-slate-500"
+          className="fill-[#7c8a9c]"
           style={{ fontSize: 11 }}
         >
           {fullScaleWatts}
@@ -189,15 +192,15 @@ export default function PowerGauge({
       </svg>
 
       {scaleNote && (
-        <p className="mt-1 text-center text-xs text-slate-500">{scaleNote}</p>
+        <p className="mt-1 text-center text-xs text-ink-onDark-muted">{scaleNote}</p>
       )}
       {value !== null && value > fullScaleWatts && (
-        <p className="mt-1 text-xs font-semibold text-rose-400">
+        <p className="mt-1 text-xs font-semibold text-[#f0776f]">
           Above the {fullScaleWatts} W dial range
         </p>
       )}
       {stale && (
-        <p className="mt-1 text-center text-xs text-amber-400/90">
+        <p className="mt-1 text-center text-xs text-[#f2b53c]">
           Last stored reading - the meter is not reporting right now
         </p>
       )}

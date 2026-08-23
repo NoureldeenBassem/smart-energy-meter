@@ -134,24 +134,26 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white">
-          <Wallet className="h-6 w-6 text-emerald-400" />
-          Budget Planner
-        </h1>
-        <p className="mt-1 text-sm text-slate-400">
+      <div className="mb-6 flex items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent">
+          <Wallet className="h-5 w-5 text-surface-ink" aria-hidden />
+        </span>
+        <div>
+        <h1 className="text-[28px] font-bold tracking-tight text-ink">Budget Planner</h1>
+        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
           Pick the bill you want at the end of the cycle. The tariff engine works
           backwards to the kWh that produces it.
         </p>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-4 lg:grid-cols-5">
         {/* ---------------- input ---------------- */}
         <div className="lg:col-span-2">
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-[var(--radius-card)] bg-surface p-6 shadow-[var(--shadow-card)]">
             <label
               htmlFor="target"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-400"
+              className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted"
             >
               Target monthly bill
             </label>
@@ -168,13 +170,13 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                   setSavedMessage(null);
                 }}
                 placeholder="800"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-2xl font-bold text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-500"
+                className="num w-full rounded-xl border border-line bg-surface-muted px-4 py-3.5 text-3xl font-bold text-ink outline-none transition placeholder:text-ink-muted/50 focus:border-accent-deep"
               />
-              <span className="text-sm font-semibold text-slate-400">EGP</span>
+              <span className="text-sm font-bold text-ink-muted">EGP</span>
             </div>
 
             <div className="mt-5">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
                 Alert me at
               </span>
               <div className="mt-2 flex gap-2">
@@ -186,17 +188,17 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                       setThreshold(t);
                       setSavedMessage(null);
                     }}
-                    className={`flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
+                    className={`num flex-1 rounded-[var(--radius-pill)] py-2 text-sm font-bold transition ${
                       threshold === t
-                        ? "border-emerald-500 bg-emerald-600 text-white"
-                        : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-600"
+                        ? "bg-surface-ink text-ink-onDark"
+                        : "bg-surface-muted text-ink-muted hover:text-ink"
                     }`}
                   >
                     {t}%
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-ink-muted">
                 Percentage of the allowance at which the banner appears.
               </p>
             </div>
@@ -205,7 +207,7 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
               type="button"
               onClick={handleSave}
               disabled={!targetValid || saving}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-surface-ink py-3.5 text-sm font-bold text-ink-onDark transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -216,18 +218,18 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
             </button>
 
             {savedTarget !== null && (
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="num mt-3 text-xs text-ink-muted">
                 Currently saved target: {savedTarget} EGP
               </p>
             )}
             {savedMessage && (
-              <p className="mt-3 flex items-start gap-1.5 rounded-lg border border-emerald-900/60 bg-emerald-950/25 p-3 text-xs text-emerald-200">
+              <p className="mt-3 flex items-start gap-1.5 rounded-xl border border-accent-deep/25 bg-accent-wash p-3 text-xs text-accent-deep">
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 {savedMessage}
               </p>
             )}
             {error && (
-              <p className="mt-3 rounded-lg border border-rose-900/60 bg-rose-950/25 p-3 text-xs text-rose-200">
+              <p className="mt-3 rounded-xl border border-warn/25 bg-warn-wash p-3 text-xs text-warn">
                 {error}
               </p>
             )}
@@ -237,43 +239,43 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
         {/* ---------------- result ---------------- */}
         <div className="lg:col-span-3">
           {!targetValid ? (
-            <div className="flex h-full min-h-[220px] items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center text-sm text-slate-500">
+            <div className="flex h-full min-h-[220px] items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-line bg-surface/60 p-6 text-center text-sm text-ink-muted">
               Enter a target bill to see the kWh it allows.
             </div>
           ) : (
-            <div className="rounded-xl border border-emerald-900/50 bg-gradient-to-br from-emerald-950/30 to-slate-900 p-6">
+            <div className="on-ink rounded-[var(--radius-card)] bg-surface-ink p-6 shadow-[var(--shadow-ink)]">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300/80">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-onDark-muted">
                     Allowed consumption
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-5xl font-bold tracking-tight text-emerald-300">
+                    <span className="num text-[56px] font-bold leading-none text-accent">
                       {allowance ? allowance.allowed_kwh.toFixed(1) : "--"}
                     </span>
-                    <span className="text-lg text-emerald-200/70">kWh</span>
+                    <span className="text-lg font-semibold text-ink-onDark-muted">kWh</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-300">
+                  <p className="mt-2 text-sm text-ink-onDark-muted">
                     for the whole billing cycle
                   </p>
                 </div>
                 {calculating && (
-                  <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                  <Loader2 className="h-4 w-4 animate-spin text-ink-onDark-muted" />
                 )}
               </div>
 
               {allowance && (
                 <>
                   {/* The round trip, shown rather than asserted. */}
-                  <p className="mt-4 flex items-start gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-400">
-                    <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <p className="mt-5 flex items-start gap-2 rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-ink-onDark-muted">
+                    <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
                     <span>
                       Charging {allowance.allowed_kwh.toFixed(3)} kWh through the tariff
                       gives{" "}
-                      <span className="font-semibold text-slate-200">
+                      <span className="num font-bold text-accent">
                         {allowance.bill_at_allowance.toFixed(2)} EGP
                       </span>
-                      , against a {allowance.target_bill_egp.toFixed(2)} EGP target - the
+                      , against a {allowance.target_bill_egp.toFixed(2)} EGP target — the
                       inverse and the forward function agree.
                     </span>
                   </p>
@@ -308,37 +310,37 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                   </div>
 
                   {prediction && (
-                    <div className="mt-5 border-t border-slate-800 pt-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <div className="mt-6 border-t border-line-dark pt-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-onDark-muted">
                         Against this cycle
                       </p>
                       {usedPct !== null && (
                         <>
                           <div className="mt-2 mb-1.5 flex justify-between text-xs">
-                            <span className="text-slate-400">
+                            <span className="num text-ink-onDark-muted">
                               {prediction.kwh_so_far.toFixed(1)} kWh used of{" "}
                               {allowance.allowed_kwh.toFixed(1)} allowed
                             </span>
                             <span
-                              className={`font-semibold ${
+                              className={`num font-bold ${
                                 usedPct >= 90
-                                  ? "text-rose-400"
+                                  ? "text-[#f0776f]"
                                   : usedPct >= threshold
-                                    ? "text-amber-400"
-                                    : "text-emerald-400"
+                                    ? "text-[#f2b53c]"
+                                    : "text-accent"
                               }`}
                             >
                               {usedPct.toFixed(1)}%
                             </span>
                           </div>
-                          <div className="h-2.5 overflow-hidden rounded-full bg-slate-800">
+                          <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${
                                 usedPct >= 90
-                                  ? "bg-rose-500"
+                                  ? "bg-[#f0776f]"
                                   : usedPct >= threshold
-                                    ? "bg-amber-500"
-                                    : "bg-emerald-500"
+                                    ? "bg-[#f2b53c]"
+                                    : "bg-accent"
                               }`}
                               style={{ width: `${Math.min(usedPct, 100)}%` }}
                             />
@@ -349,14 +351,14 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                       {overshoot !== null && (
                         <p className="mt-3 text-sm">
                           {overshoot > 0 ? (
-                            <span className="text-rose-300">
+                            <span className="text-[#f0776f]">
                               The current forecast of{" "}
                               {prediction.predicted_kwh.toFixed(1)} kWh exceeds this
                               target by <strong>{overshoot.toFixed(1)} kWh</strong>. To
                               hit it you would need to cut back.
                             </span>
                           ) : (
-                            <span className="text-emerald-300">
+                            <span className="text-accent">
                               The current forecast of{" "}
                               {prediction.predicted_kwh.toFixed(1)} kWh comes in{" "}
                               <strong>{Math.abs(overshoot).toFixed(1)} kWh</strong> under
@@ -374,12 +376,12 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
 
           {/* ---------------- why ---------------- */}
           {brackets.length > 0 && (
-            <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                <Info className="h-3.5 w-3.5" />
+            <div className="mt-4 rounded-[var(--radius-card)] bg-surface p-6 shadow-[var(--shadow-card)]">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                <Info className="h-3.5 w-3.5" aria-hidden />
                 Why it is not a flat rate
               </p>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-muted">
                 Egypt&apos;s residential tariff is progressive: each bracket&apos;s rate
                 applies only to the slice of consumption inside it, so doubling the
                 target bill does not double the kWh it buys.
@@ -388,21 +390,21 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[380px] text-sm">
                   <thead>
-                    <tr className="border-b border-slate-800 text-left text-xs uppercase tracking-wider text-slate-500">
+                    <tr className="border-b border-line text-left text-[10px] uppercase tracking-[0.1em] text-ink-muted">
                       <th className="pb-2 font-semibold">Bracket</th>
                       <th className="pb-2 font-semibold">kWh range</th>
                       <th className="pb-2 text-right font-semibold">EGP / kWh</th>
                     </tr>
                   </thead>
-                  <tbody className="font-mono text-slate-300">
+                  <tbody className="num text-ink-soft">
                     {brackets.map((b) => {
                       const active =
                         allowance?.tariff_position.active_bracket === b.bracket_order;
                       return (
                         <tr
                           key={b.bracket_order}
-                          className={`border-b border-slate-800/60 last:border-0 ${
-                            active ? "bg-emerald-950/30 text-emerald-200" : ""
+                          className={`border-b border-line/70 last:border-0 ${
+                            active ? "bg-accent-wash font-bold text-accent-deep" : ""
                           }`}
                         >
                           <td className="py-1.5">{b.bracket_order}</td>
@@ -438,10 +440,12 @@ function MiniStat({
   note?: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-      <p className="text-[11px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-white">{value}</p>
-      {note && <p className="mt-0.5 text-xs text-slate-500">{note}</p>}
+    <div className="rounded-xl bg-white/5 p-3.5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-onDark-muted">
+        {label}
+      </p>
+      <p className="num mt-1 text-xl font-bold text-ink-onDark">{value}</p>
+      {note && <p className="mt-0.5 text-xs text-ink-onDark-muted">{note}</p>}
     </div>
   );
 }

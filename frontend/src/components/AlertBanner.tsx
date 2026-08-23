@@ -42,27 +42,27 @@ export default function AlertBanner({
   return (
     <div
       role="alert"
-      className={`mb-6 flex items-start gap-3 rounded-xl border p-4 ${
+      className={`flex items-start gap-3 rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-card)] ${
         critical
-          ? "border-rose-800 bg-rose-950/40"
-          : "border-amber-800 bg-amber-950/30"
+          ? "border border-warn/30 bg-warn-wash"
+          : "border border-accent-deep/25 bg-accent-wash"
       }`}
     >
       {critical ? (
-        <OctagonAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
+        <OctagonAlert className="mt-0.5 h-5 w-5 shrink-0 text-warn" aria-hidden />
       ) : (
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-accent-deep" aria-hidden />
       )}
 
       <div className="min-w-0">
         <p
-          className={`text-sm font-semibold ${
-            critical ? "text-rose-200" : "text-amber-200"
+          className={`text-sm font-bold ${
+            critical ? "text-warn" : "text-accent-deep"
           }`}
         >
           {critical
-            ? `Critical - ${pct}% of your budget is already spent`
-            : `Heads up - ${pct}% of your budget is spent`}
+            ? `Critical — ${pct}% of your budget is already spent`
+            : `Heads up — ${pct}% of your budget is spent`}
           {typeof daysRemaining === "number" && (
             <span className="font-normal opacity-80">
               {" "}
@@ -74,21 +74,21 @@ export default function AlertBanner({
 
         {/* The backend's own wording, shown verbatim rather than paraphrased. */}
         {alert.message && (
-          <p className="mt-1 text-sm text-slate-300">{alert.message}</p>
+          <p className="mt-1 text-sm text-ink-soft">{alert.message}</p>
         )}
 
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1.5 text-xs text-ink-muted">
           Your alert threshold is {alert.alert_threshold_pct}%.{" "}
           <Link
             href="/recommendations"
-            className="underline decoration-dotted hover:text-slate-200"
+            className="font-semibold underline decoration-dotted underline-offset-2 hover:text-ink"
           >
             See what to cut back
           </Link>
           {" or "}
           <Link
             href="/budget"
-            className="underline decoration-dotted hover:text-slate-200"
+            className="font-semibold underline decoration-dotted underline-offset-2 hover:text-ink"
           >
             adjust your target
           </Link>

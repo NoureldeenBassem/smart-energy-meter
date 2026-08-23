@@ -23,8 +23,8 @@ export default function RootPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <Zap className="h-8 w-8 text-emerald-400 animate-pulse" />
+    <div className="grid min-h-screen place-items-center bg-bg">
+      <Zap className="h-8 w-8 animate-pulse text-accent-deep" aria-hidden />
     </div>
   );
 }

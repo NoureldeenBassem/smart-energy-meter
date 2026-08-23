@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   One accent, deliberately. The palette is a muted blue-gray page with white
+   cards that lift off it, plus a single near-black surface used for the hero
+   card and the active nav pill. Everything else is neutral ink.
+
+   THE ACCENT IS A FILL, NOT A TEXT COLOUR.
+   --accent is lime-yellow. On the light page it fails contrast for text at any
+   normal size, so it is used only as a fill or stroke (gauge arc, needle, the
+   one highlighted bar), or as text on --surface-ink where it is very high
+   contrast. Where an accent-coloured LABEL is needed on a light surface,
+   --accent-deep is the token to use.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #e9edf3;
+  --bg-deep: #dde3ec;
+  --surface: #ffffff;
+  --surface-muted: #f4f6fa;
+  --surface-ink: #151b23;
+  --surface-ink-soft: #1e2632;
+
+  --ink: #0f172a;
+  --ink-soft: #33415a;
+  --ink-muted: #556070;
+  --ink-onDark: #f2f5f9;
+  --ink-onDark-muted: #93a0b4;
+
+  --accent: #dce531;
+  --accent-deep: #5f6600;
+  --accent-wash: #f7fac9;
+
+  --warn: #b32a2f;
+  --warn-wash: #fdecec;
+  --ok: #2f855a;
+
+  --line: #dfe5ee;
+  --line-dark: #2b3542;
+
+  --radius-card: 20px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  --shadow-ink: 0 8px 32px -12px rgba(15, 23, 42, 0.45);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-deep: var(--bg-deep);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-ink: var(--surface-ink);
+  --color-surface-ink-soft: var(--surface-ink-soft);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-onDark: var(--ink-onDark);
+  --color-ink-onDark-muted: var(--ink-onDark-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-wash: var(--accent-wash);
+
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-ok: var(--ok);
+
+  --color-line: var(--line);
+  --color-line-dark: var(--line-dark);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numerals line up column-to-column and stop jittering as live values tick.
+   Applied via .num rather than globally so prose keeps proportional figures. */
+.num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Visible keyboard focus on both light and dark surfaces. The accent has enough
+   luminance to show against --surface-ink, and the offset keeps it clear of the
+   control's own border on light. */
+:where(a, button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.on-ink :where(a, button, input, select, [tabindex]):focus-visible {
+  outline-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------------------------------------------------------------------------
+   HeroPanel animation.
+
+   Kept here rather than in styled-jsx so the reduced-motion block above applies
+   to it without a second declaration. All three stop when the meter is not
+   reporting, because the component only attaches these classes when live.
+--------------------------------------------------------------------------- */
+.hp-flow {
+  animation: hp-flow 1.6s linear infinite;
+}
+.hp-spin {
+  transform-origin: 211px 309px;
+  animation: hp-spin 6s linear infinite;
+}
+.hp-blink {
+  animation: hp-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes hp-flow {
+  to {
+    stroke-dashoffset: -34;
+  }
+}
+@keyframes hp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes hp-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }

@@ -3,7 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Zap, Wifi, CheckCircle2, XCircle } from "lucide-react";
+
 import { registerDevice, waitForDeviceOnline } from "@/lib/device";
+
+/**
+ * Device pairing.
+ *
+ * The flow is unchanged: register the device to this account, then poll
+ * /telemetry/is-online until it reports a recent reading or the wait times out.
+ *
+ * The "not found" copy is deliberately specific about what offline MEANS here —
+ * the device row exists either way, so the only thing being waited on is a
+ * reading fresh enough to count as live. Telling someone to check their Wi-Fi
+ * when the real cause is that nothing is publishing would send them the wrong way.
+ */
 
 type Step = "intro" | "searching" | "found" | "not_found";
 
@@ -26,65 +39,82 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-      <div className="w-full max-w-md text-center">
-        {step === "intro" && (
-          <>
-            <div className="flex justify-center mb-6">
-              <div className="h-20 w-20 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center">
-                <Zap className="h-10 w-10 text-emerald-400" />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Let's connect your meter</h1>
-            <p className="text-sm text-slate-400 mb-8">
-              Make sure your Smart Meter is powered on and connected to your
-              home Wi-Fi before continuing.
-            </p>
-            <button
-              onClick={handleConnect}
-              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition"
-            >
-              Connect a Device
-            </button>
-          </>
-        )}
+    <div className="grid min-h-screen place-items-center bg-bg p-6">
+      <div className="w-full max-w-md">
+        <div className="rounded-[var(--radius-card)] bg-surface p-8 text-center shadow-[var(--shadow-card)]">
+          {step === "intro" && (
+            <>
+              <span className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-accent">
+                <Zap className="h-9 w-9 text-surface-ink" aria-hidden />
+              </span>
+              <h1 className="text-2xl font-bold tracking-tight text-ink">
+                Let&apos;s connect your meter
+              </h1>
+              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-muted">
+                Make sure your smart meter is powered on and publishing before you
+                continue.
+              </p>
+              <button
+                onClick={handleConnect}
+                className="mt-7 w-full rounded-[var(--radius-pill)] bg-surface-ink py-3.5 text-sm font-bold text-ink-onDark transition hover:opacity-90"
+              >
+                Connect a Device
+              </button>
+            </>
+          )}
 
-        {step === "searching" && (
-          <>
-            <div className="flex justify-center mb-6">
-              <Wifi className="h-16 w-16 text-emerald-400 animate-pulse" />
-            </div>
-            <h1 className="text-xl font-semibold text-white mb-2">Searching for your meter...</h1>
-            <p className="text-sm text-slate-400">This usually takes a few seconds.</p>
-          </>
-        )}
+          {step === "searching" && (
+            <>
+              <span className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-accent-wash">
+                <Wifi className="h-9 w-9 animate-pulse text-accent-deep" aria-hidden />
+              </span>
+              <h1 className="text-xl font-bold tracking-tight text-ink">
+                Searching for your meter...
+              </h1>
+              <p className="mt-2 text-sm text-ink-muted">
+                This usually takes a few seconds.
+              </p>
+            </>
+          )}
 
-        {step === "found" && (
-          <>
-            <div className="flex justify-center mb-6">
-              <CheckCircle2 className="h-16 w-16 text-emerald-400" />
-            </div>
-            <h1 className="text-xl font-semibold text-white">Device found!</h1>
-          </>
-        )}
+          {step === "found" && (
+            <>
+              <span className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-accent">
+                <CheckCircle2 className="h-9 w-9 text-surface-ink" aria-hidden />
+              </span>
+              <h1 className="text-xl font-bold tracking-tight text-ink">Device found</h1>
+              <p className="mt-2 text-sm text-ink-muted">Taking you to your dashboard.</p>
+            </>
+          )}
 
-        {step === "not_found" && (
-          <>
-            <div className="flex justify-center mb-6">
-              <XCircle className="h-16 w-16 text-slate-500" />
-            </div>
-            <h1 className="text-xl font-semibold text-white mb-2">No device detected</h1>
-            <p className="text-sm text-slate-400 mb-6">
-              Make sure it's powered on and connected to Wi-Fi, then try again.
-            </p>
-            <button
-              onClick={handleConnect}
-              className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
-            >
-              Try Again
-            </button>
-          </>
-        )}
+          {step === "not_found" && (
+            <>
+              <span className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-surface-muted">
+                <XCircle className="h-9 w-9 text-ink-muted" aria-hidden />
+              </span>
+              <h1 className="text-xl font-bold tracking-tight text-ink">
+                No recent readings
+              </h1>
+              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-muted">
+                The device is registered to your account, but nothing has published a
+                reading recently. Start the meter — or the simulator and the MQTT worker —
+                and try again.
+              </p>
+              <button
+                onClick={handleConnect}
+                className="mt-7 w-full rounded-[var(--radius-pill)] bg-surface-ink py-3.5 text-sm font-bold text-ink-onDark transition hover:opacity-90"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => router.push("/overview")}
+                className="mt-2.5 w-full rounded-[var(--radius-pill)] py-2.5 text-sm font-semibold text-ink-muted transition hover:text-ink"
+              >
+                Continue to the dashboard anyway
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

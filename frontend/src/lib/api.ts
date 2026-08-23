@@ -147,6 +147,24 @@ export interface TariffAllowance {
   tariff_position: TariffPosition;
 }
 
+/**
+ * One local-day rollup from telemetry_daily.
+ *
+ * bucket_start is a plain date string (YYYY-MM-DD) on Africa/Cairo local days,
+ * not UTC — the backend buckets it that way so the chart's "today" is the same
+ * day the forecaster and the recommendation budget mean. See
+ * backend/app/core/billing_time.py.
+ *
+ * total_energy_kwh is the authoritative figure. avg_power_w is sampling-weighted
+ * and deliberately not read by any UI (SUBMISSION_STATUS.md §2).
+ */
+export interface DailyBucket {
+  bucket_start: string;
+  total_energy_kwh: number;
+  avg_power_w: number | null;
+  peak_power_w: number | null;
+}
+
 export interface TariffBracket {
   bracket_order: number;
   kwh_from: number;
@@ -178,6 +196,23 @@ export async function fetchTelemetry(deviceId: string): Promise<TelemetryDashboa
 export async function fetchIsOnline(deviceId: string): Promise<boolean> {
   const res = await apiClient.get(`/telemetry/is-online/${deviceId}`);
   return Boolean(res.data.is_online);
+}
+
+/**
+ * Daily kWh totals, most recent `days` local days, oldest first.
+ *
+ * The endpoint has existed since the aggregation worker was built; this is the
+ * first screen to read it. No backend change was needed to chart the cycle.
+ */
+export async function fetchDailyTelemetry(
+  deviceId: string,
+  days = 31,
+): Promise<DailyBucket[]> {
+  const res = await apiClient.get(`/telemetry/daily/${deviceId}`, {
+    params: { days },
+  });
+  const rows: DailyBucket[] = res.data ?? [];
+  return [...rows].sort((a, b) => a.bucket_start.localeCompare(b.bucket_start));
 }
 
 export async function fetchPrediction(deviceId: string): Promise<Prediction> {
