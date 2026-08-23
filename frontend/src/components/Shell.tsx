@@ -118,7 +118,7 @@ export default function Shell({
           </Link>
 
           <nav aria-label="Primary" className="min-w-0 flex-1">
-            <ul className="mx-auto flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[var(--r-pill)] bg-white/45 p-1.5">
+            <ul className="mx-auto flex w-fit max-w-full items-center gap-0.5 overflow-x-auto">
               {NAV.map((item) => {
                 const active = pathname === item.href;
                 const Icon = item.icon;
@@ -128,23 +128,18 @@ export default function Shell({
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={clsx(
-                        "flex items-center gap-2 whitespace-nowrap rounded-[var(--r-pill)] px-3 py-2 text-[13px] font-semibold transition-all duration-300 sm:px-4",
+                        "flex items-center whitespace-nowrap rounded-[var(--r-pill)] text-[13px] font-medium transition-all duration-300",
                         active
-                          ? "bg-ink-panel text-on-dark shadow-md"
-                          : "text-ink-3 hover:bg-white/70 hover:text-ink",
+                          ? "gap-2.5 bg-ink-panel py-1.5 pl-1.5 pr-5 font-semibold text-on-dark shadow-md"
+                          : "px-3.5 py-2.5 text-ink-2 hover:text-ink sm:px-4",
                       )}
                     >
-                      <span
-                        className={clsx(
-                          "grid h-6 w-6 shrink-0 place-items-center rounded-full transition-colors",
-                          active ? "bg-accent text-ink-panel" : "text-ink-3",
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5" aria-hidden />
-                      </span>
-                      <span className={clsx(active ? "inline" : "hidden lg:inline")}>
-                        {item.label}
-                      </span>
+                      {active && (
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/12">
+                          <Icon className="h-4 w-4 text-accent" aria-hidden />
+                        </span>
+                      )}
+                      {item.label}
                     </Link>
                   </li>
                 );

@@ -2,13 +2,26 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Lock } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  Lock,
+  Refrigerator,
+  Lightbulb,
+  AirVent,
+  Flame,
+  WashingMachine,
+  Plug,
+  Thermometer,
+  TriangleAlert,
+} from "lucide-react";
 import { clsx } from "clsx";
 
 import Shell from "@/components/Shell";
 import AlertBanner from "@/components/AlertBanner";
 import PhaseDial from "@/components/PhaseDial";
-import TrendChart from "@/components/TrendChart";
+import ForecastGauge from "@/components/ForecastGauge";
+import UsageBars from "@/components/UsageBars";
 import PowerGauge, { fullScaleFor } from "@/components/PowerGauge";
 import { Card, CardHead } from "@/components/ui/Card";
 import { ThresholdBar } from "@/components/ui/ThresholdBar";
@@ -18,37 +31,46 @@ import {
   fetchDailyTelemetry,
   fetchPrediction,
   fetchRecommendations,
-  fetchTariffBrackets,
   fetchTelemetry,
+  type Allocation,
   type DailyBucket,
   type Prediction,
   type RecommendationDashboard,
-  type TariffBracket,
   type TelemetryDashboard,
 } from "@/lib/api";
 
 /**
  * Overview.
  *
- * Composition follows the reference: the scene holds the left column with the
- * charcoal Overview panel anchored beneath it, and the analytical cards stack to
- * the right — tariff position, phase, then the cycle trend running full width.
+ * Laid out to the supplied reference: the annotated panel scene carries the
+ * left column with the charcoal status panel anchored at its foot, and four
+ * glass cards sit in a 2x2 to the right — load performance, energy forecast,
+ * usage bars, appliance recommendations.
  *
  * Every figure is fetched. The only browser-side arithmetic is presentational
- * geometry, and each site is marked: the confidence marker's offset, the budget
- * bar's width, and how far into each published bracket the fetched cycle-to-date
- * consumption sits. No price, allowance or forecast is recomputed here.
+ * geometry, and each site is marked. No price, allowance or forecast is
+ * recomputed here.
  */
 
 const LIVE_POLL_MS = 5000;
 const FORECAST_POLL_MS = 30000;
+
+/** Appliance name -> icon, matching the reference's per-row iconography. */
+function applianceIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("fridge") || n.includes("refriger")) return Refrigerator;
+  if (n.includes("light")) return Lightbulb;
+  if (n.includes("air") || n.includes("ac") || n.includes("condition")) return AirVent;
+  if (n.includes("heater") || n.includes("water")) return Flame;
+  if (n.includes("wash")) return WashingMachine;
+  return Plug;
+}
 
 function OverviewBody({ deviceId }: { deviceId: string }) {
   const [telemetry, setTelemetry] = useState<TelemetryDashboard | null>(null);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [recs, setRecs] = useState<RecommendationDashboard | null>(null);
   const [daily, setDaily] = useState<DailyBucket[]>([]);
-  const [brackets, setBrackets] = useState<TariffBracket[]>([]);
   const [allowedKwh, setAllowedKwh] = useState<number | null>(null);
 
   const [telemetryError, setTelemetryError] = useState<string | null>(null);
@@ -57,7 +79,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
   const [loading, setLoading] = useState(true);
 
   // Each section reports its own failure. One endpoint being down must not blank
-  // the other two — a missing budget is a normal state for a new account and it
+  // the others — a missing budget is a normal state for a new account and it
   // should not take the live gauge with it.
   const loadLive = useCallback(async () => {
     try {
@@ -85,8 +107,8 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
     if (rec.status === "fulfilled") {
       setRecs(rec.value);
       setRecsError(null);
-      // The budget ceiling drawn on the trend is the tariff engine's own inverse
-      // of the saved target, fetched — never a kWh figure derived in the browser.
+      // The allowance drawn on the bars is the tariff engine's own inverse of
+      // the saved target, fetched — never a kWh figure derived in the browser.
       try {
         const a = await fetchAllowance(rec.value.target_bill_egp);
         setAllowedKwh(a.allowed_kwh);
@@ -106,19 +128,14 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
       await Promise.all([loadLive(), loadForecast()]);
       if (!cancelled) setLoading(false);
     })();
-
-    const liveTimer = setInterval(loadLive, LIVE_POLL_MS);
-    const forecastTimer = setInterval(loadForecast, FORECAST_POLL_MS);
+    const a = setInterval(loadLive, LIVE_POLL_MS);
+    const b = setInterval(loadForecast, FORECAST_POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(liveTimer);
-      clearInterval(forecastTimer);
+      clearInterval(a);
+      clearInterval(b);
     };
   }, [loadLive, loadForecast]);
-
-  useEffect(() => {
-    fetchTariffBrackets().then(setBrackets).catch(() => setBrackets([]));
-  }, []);
 
   if (loading) {
     return (
@@ -128,471 +145,408 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
     );
   }
 
-  // ---- presentational geometry (the only browser-side arithmetic here) ----
-  const band = prediction
-    ? prediction.confidence_bill_high_egp - prediction.confidence_bill_low_egp
-    : 0;
-  const markerPct =
-    prediction && band > 0
-      ? ((prediction.predicted_bill_egp - prediction.confidence_bill_low_egp) / band) * 100
-      : 50;
-
-  const usedPct = recs?.alert.pct_of_budget_used ?? 0;
-  const barPct = Math.min(usedPct, 100);
-
-  const overTargetEgp =
-    prediction && recs ? prediction.predicted_bill_egp - recs.target_bill_egp : null;
-
-  const topRecommendations = recs
-    ? [...recs.allocations]
-        .sort((a, b) => Number(b.is_essential) - Number(a.is_essential))
-        .slice(0, 3)
-    : [];
-
   const connectedLoadW = recs?.allocations.reduce((s, a) => s + a.rated_power_w, 0) ?? 0;
   const gaugeFullScale = fullScaleFor(connectedLoadW);
 
-  // A reading older than a minute is not "live". The meter's own timestamp is the
-  // right thing to age, not the time the row was written.
-  const readingAgeSeconds = telemetry
+  // A reading older than a minute is not "live". The meter's own timestamp is
+  // the right thing to age, not when the row was written.
+  const ageSeconds = telemetry
     ? (Date.now() - new Date(telemetry.last_updated).getTime()) / 1000
     : null;
-  const readingIsStale = readingAgeSeconds !== null && readingAgeSeconds > 60;
-  const meterLive = telemetry !== null && !readingIsStale;
+  const stale = ageSeconds !== null && ageSeconds > 60;
+  const meterLive = telemetry !== null && !stale;
 
-  const kwhSoFar = prediction?.kwh_so_far ?? telemetry?.month_energy_kwh ?? 0;
+  const usedPct = recs?.alert.pct_of_budget_used ?? 0;
   const threshold = recs?.alert.alert_threshold_pct ?? 85;
 
-  // Headroom under target, as a percentage — rendered on the scene ONLY when the
-  // forecast actually lands under the target. Never a fabricated "saving".
-  const savingPct =
-    prediction && recs && recs.target_bill_egp > 0 && overTargetEgp !== null && overTargetEgp < 0
-      ? (Math.abs(overTargetEgp) / recs.target_bill_egp) * 100
+  // Presentational only: each live reading as a fraction of a sane full scale,
+  // so the bars have somewhere to sit. No measurement is derived here.
+  const loadFraction = telemetry ? Math.min(telemetry.active_power / gaugeFullScale, 1) : 0;
+  const voltFraction = telemetry ? Math.min(telemetry.voltage / 260, 1) : 0;
+  const currentFraction = telemetry ? Math.min(telemetry.current / 25, 1) : 0;
+  const pfFraction = telemetry ? Math.min(Math.abs(telemetry.power_factor), 1) : 0;
+
+  const essentials = recs?.allocations.filter((a) => a.is_essential) ?? [];
+  const satisfaction =
+    recs && recs.allocations.length > 0
+      ? (recs.allocations.filter((a) => a.status === "essential" || a.status === "optimal").length /
+          recs.allocations.length) *
+        100
       : null;
 
   return (
     <div className="space-y-4">
       <AlertBanner alert={recs?.alert} daysRemaining={recs?.days_remaining_in_month} />
 
-      {telemetryError && (
-        <Card className="!border-warn/35 p-4 text-sm text-warn">{telemetryError}</Card>
-      )}
-
       <div className="grid gap-4 xl:grid-cols-12">
-        {/* ============ left: open to the scene, panel at the foot ============ */}
-        <div className="flex min-h-[560px] flex-col justify-end gap-4 xl:col-span-4">
-          {/* A floating selector over the background, exactly as the reference
-              floats its turbine picker. Nothing boxes the scene in. */}
-          <div className="rise d1 flex items-start">
-            <span className="inline-flex items-center gap-2 rounded-[var(--r-pill)] panel-ink px-4 py-2.5 text-[12px] font-semibold text-on-dark">
-              <span className={clsx("h-1.5 w-1.5 rounded-full", meterLive ? "pulse-dot bg-accent" : "bg-on-dark-2")} />
-              {meterLive ? "Meter reporting" : "Meter not reporting"}
+        {/* ============ left: the annotated scene, panel at its foot ============ */}
+        <div className="flex min-h-[620px] flex-col justify-between gap-4 xl:col-span-5">
+          <div className="rise d1">
+            <span className="inline-flex items-center gap-2.5 rounded-[var(--r-pill)] panel-ink px-4 py-2.5 text-[13px] font-semibold text-on-dark">
+              <span className={clsx("h-2 w-2 rounded-full", meterLive ? "pulse-dot bg-accent" : "bg-on-dark-2")} />
+              <span className="text-accent">Household Meter 01</span>
+              <ChevronDown className="h-3.5 w-3.5 text-on-dark-2" aria-hidden />
             </span>
           </div>
 
-          <div className="flex-1" />
-
           <Card tone="ink" className="rise d2 p-6">
-            <div className="flex items-start justify-between">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <h2 className="text-[15px] font-semibold text-on-dark">Overview</h2>
-                <p className="mt-0.5 text-xs text-on-dark-2">Live power draw</p>
+                <h2 className="text-[17px] font-bold text-on-dark">Meter Status</h2>
+                <p className="mt-0.5 text-xs text-on-dark-2">
+                  {telemetry ? "Household Meter 01" : "No reading"}
+                </p>
+                <div className="mt-2">
+                  <PowerGauge
+                    watts={telemetry?.active_power}
+                    fullScaleWatts={gaugeFullScale}
+                    scaleNote={
+                      connectedLoadW > 0
+                        ? `Scale ${gaugeFullScale} W · connected load ${connectedLoadW} W`
+                        : undefined
+                    }
+                    stale={stale}
+                  />
+                </div>
               </div>
-              <span className="rounded-[var(--r-pill)] bg-white/15 px-3 py-1.5 text-[11px] font-semibold text-on-dark">
-                Today
-              </span>
+
+              <div className="flex flex-col">
+                <h2 className="text-[17px] font-bold text-on-dark">Cycle Status</h2>
+                <p className="mt-0.5 text-xs text-on-dark-2">Africa/Cairo local days</p>
+
+                <dl className="mt-4 space-y-3.5">
+                  <InkRow label="Used today" value={telemetry ? telemetry.today_energy_kwh.toFixed(2) : "--"} unit="kWh" />
+                  <InkRow label="This cycle" value={telemetry ? telemetry.month_energy_kwh.toFixed(1) : "--"} unit="kWh" />
+                  <InkRow
+                    label="Cycle position"
+                    value={prediction ? `${prediction.day_of_month}/${prediction.cycle_length_days}` : "--"}
+                    unit="days"
+                  />
+                  <InkRow
+                    label="Spent so far"
+                    value={prediction ? prediction.bill_so_far_egp.toFixed(0) : "--"}
+                    unit="EGP"
+                  />
+                </dl>
+
+                <div className="mt-auto pt-4">
+                  <div className="mb-1.5 flex items-center justify-between text-[11px]">
+                    <span className="text-on-dark-2">Budget used</span>
+                    <span
+                      className={clsx(
+                        "num font-bold",
+                        usedPct >= 90 ? "text-[#f2726b]" : usedPct >= threshold ? "text-[#f5b13a]" : "text-accent",
+                      )}
+                    >
+                      {recs ? usedPct.toFixed(1) : "--"}%
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/12">
+                    <div
+                      className={clsx(
+                        "h-full rounded-full transition-all duration-700",
+                        usedPct >= 90 ? "bg-[#f2726b]" : usedPct >= threshold ? "bg-[#f5b13a]" : "bg-accent",
+                      )}
+                      style={{ width: `${Math.min(usedPct, 100)}%` }}
+                    />
+                  </div>
+                  {telemetry && (
+                    <p className="mt-3 text-[10px] leading-relaxed text-on-dark-2">
+                      Timestamped <span className="num">{new Date(telemetry.last_updated).toLocaleTimeString()}</span>{" "}
+                      by the device, not on arrival.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-
-            <div className="mt-1">
-              <PowerGauge
-                watts={telemetry?.active_power}
-                fullScaleWatts={gaugeFullScale}
-                scaleNote={
-                  connectedLoadW > 0
-                    ? `Scale: ${gaugeFullScale} W, your registered connected load (${connectedLoadW} W)`
-                    : undefined
-                }
-                stale={readingIsStale}
-              />
-            </div>
-
-            <dl className="mt-5 space-y-3.5 border-t border-ink-panel-line pt-5">
-              <InkRow
-                label="Used today"
-                value={telemetry ? telemetry.today_energy_kwh.toFixed(2) : "--"}
-                unit="kWh"
-              />
-              <InkRow
-                label="This billing cycle"
-                value={telemetry ? telemetry.month_energy_kwh.toFixed(1) : "--"}
-                unit="kWh"
-              />
-              <InkRow
-                label="Cycle position"
-                value={
-                  prediction ? `${prediction.day_of_month} / ${prediction.cycle_length_days}` : "--"
-                }
-                unit="days"
-              />
-            </dl>
-
-            {telemetry && (
-              <p className="mt-4 text-[11px] leading-relaxed text-on-dark-2">
-                Timestamped{" "}
-                <span className="num">{new Date(telemetry.last_updated).toLocaleTimeString()}</span>{" "}
-                by the device itself, not on arrival.
-              </p>
-            )}
           </Card>
         </div>
 
-        {/* ===================== right: analysis ===================== */}
-        <div className="grid content-start gap-4 xl:col-span-8">
-          <div className="grid gap-4 lg:grid-cols-5">
-            <Card className="rise d3 lg:col-span-3">
+        {/* ===================== right: the 2x2 card grid ===================== */}
+        <div className="grid content-start gap-4 xl:col-span-7">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* ---- Load Performance ---- */}
+            <Card className="rise d3">
               <CardHead
-                title="Tariff position"
-                hint="Egypt's progressive brackets — each rate applies only to its own slice"
+                title="Load Performance"
+                hint="Live electrical readings from the meter"
                 action={
                   <Link
-                    href="/budget"
-                    aria-label="Open the budget planner"
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+                    href="/recommendations"
+                    aria-label="Open today's plan"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
                   >
                     <ArrowUpRight className="h-4 w-4" aria-hidden />
                   </Link>
                 }
               />
-              <div className="space-y-3 px-6 pb-6 pt-4">
-                {brackets.length === 0 ? (
-                  <p className="text-sm text-ink-3">Tariff schedule unavailable.</p>
+              <div className="space-y-4 px-6 pb-5 pt-4">
+                {telemetryError ? (
+                  <p className="text-sm text-warn">{telemetryError}</p>
                 ) : (
-                  brackets.map((b) => {
-                    // Presentational only: how much of THIS published bracket the
-                    // fetched cycle-to-date consumption fills. No price computed.
-                    const upper = b.kwh_to ?? b.kwh_from + 400;
-                    const width = upper - b.kwh_from;
-                    const filled = Math.min(Math.max(kwhSoFar - b.kwh_from, 0), width);
-                    const isActive =
-                      prediction?.tariff_position.active_bracket === b.bracket_order;
-                    const done = filled >= width - 1e-9 && b.kwh_to !== null;
-                    const remaining = prediction?.tariff_position.kwh_remaining_in_bracket;
-
-                    return (
-                      <ThresholdBar
-                        key={b.bracket_order}
-                        label={`${b.kwh_from}–${b.kwh_to ?? "∞"} kWh`}
-                        valueText={`${b.price_per_kwh.toFixed(2)} EGP`}
-                        fraction={width > 0 ? filled / width : 0}
-                        state={isActive ? "active" : done ? "normal" : "muted"}
-                        note={
-                          isActive && remaining !== null && remaining !== undefined
-                            ? `You are here — ${remaining.toFixed(0)} kWh before the next bracket`
-                            : undefined
-                        }
-                      />
-                    );
-                  })
+                  <>
+                    <ThresholdBar
+                      label="Active power"
+                      valueText={telemetry ? `${telemetry.active_power.toFixed(0)} W` : "--"}
+                      fraction={loadFraction}
+                      state={loadFraction >= 0.85 ? "warn" : "active"}
+                      note={`of ${gaugeFullScale} W connected load`}
+                    />
+                    <ThresholdBar
+                      label="Voltage (ZMPT101B)"
+                      valueText={telemetry ? `${telemetry.voltage.toFixed(1)} V` : "--"}
+                      fraction={voltFraction}
+                      state="normal"
+                    />
+                    <ThresholdBar
+                      label="Current (SCT-013)"
+                      valueText={telemetry ? `${telemetry.current.toFixed(2)} A` : "--"}
+                      fraction={currentFraction}
+                      state="normal"
+                    />
+                    <ThresholdBar
+                      label="Power factor"
+                      valueText={telemetry ? telemetry.power_factor.toFixed(2) : "--"}
+                      fraction={pfFraction}
+                      state={pfFraction < 0.8 ? "warn" : "muted"}
+                    />
+                  </>
                 )}
+
+                <div className="flex items-center justify-between border-t border-white/50 pt-3.5">
+                  <span className="flex items-center gap-2 text-xs text-ink-3">
+                    <Thermometer className="h-4 w-4" aria-hidden />
+                    Reading age{" "}
+                    <span className="num font-semibold text-ink-2">
+                      {ageSeconds === null ? "--" : `${Math.round(ageSeconds)}s`}
+                    </span>
+                  </span>
+                  {stale ? (
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-warn">
+                      <TriangleAlert className="h-4 w-4" aria-hidden />
+                      Not reporting
+                    </span>
+                  ) : (
+                    <span className="rounded-[var(--r-pill)] bg-accent px-2.5 py-1 text-[10px] font-bold text-ink-panel">
+                      LIVE
+                    </span>
+                  )}
+                </div>
               </div>
             </Card>
 
-            <Card className="rise d4 lg:col-span-2">
-              <CardHead title="Phase" hint="Power factor is the V–I angle" />
-              <div className="px-5 pb-6 pt-3">
+            {/* ---- Energy Forecast ---- */}
+            <Card className="rise d4">
+              <CardHead
+                title="Energy Forecast"
+                hint="Month-end bill on the progressive tariff"
+                action={
+                  <Link
+                    href="/budget"
+                    aria-label="Open the budget planner"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+                  >
+                    <ArrowUpRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                }
+              />
+              <div className="px-5 pb-5 pt-2">
+                {predictionError ? (
+                  <p className="py-10 text-center text-sm text-warn">{predictionError}</p>
+                ) : (
+                  <>
+                    <ForecastGauge
+                      predictedEgp={prediction?.predicted_bill_egp ?? null}
+                      targetEgp={recs?.target_bill_egp ?? null}
+                      stale={stale}
+                    />
+                    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3.5 border-t border-white/50 pt-4">
+                      <Field label="Predicted kWh" value={prediction ? prediction.predicted_kwh.toFixed(2) : "--"} />
+                      <Field
+                        label="Confidence band"
+                        value={
+                          prediction
+                            ? `${prediction.confidence_bill_low_egp.toFixed(0)}–${prediction.confidence_bill_high_egp.toFixed(0)}`
+                            : "--"
+                        }
+                      />
+                      <Field label="Model version" value={prediction?.model_version ?? "--"} mono />
+                      <Field
+                        label="Day coverage"
+                        value={
+                          prediction
+                            ? `${prediction.data_quality.days_with_readings}/${prediction.data_quality.days_elapsed}`
+                            : "--"
+                        }
+                      />
+                    </dl>
+                    {prediction && prediction.prediction_method !== "model" && (
+                      <p className="mt-3 rounded-lg bg-warn-wash p-2.5 text-[11px] font-medium leading-relaxed text-warn">
+                        Model withheld: {prediction.fallback_reason}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* ---- Energy Usage ---- */}
+            <Card className="rise d5">
+              <CardHead
+                title="Energy Usage (kWh)"
+                hint="Daily totals this cycle"
+                action={
+                  <span className="rounded-[var(--r-pill)] bg-white/55 px-3.5 py-1.5 text-[11px] font-semibold text-ink-2">
+                    Last 14 days
+                  </span>
+                }
+              />
+              <UsageBars
+                days={daily}
+                dailyAllowanceKwh={recs?.budget_daily_kwh ?? null}
+              />
+            </Card>
+
+            {/* ---- Appliance Recommendations ---- */}
+            <Card className="rise d6">
+              <CardHead
+                title="Appliance Recommendations"
+                hint="Today's plan, essentials reserved first"
+                action={
+                  <Link
+                    href="/recommendations"
+                    aria-label="Open the full plan"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+                  >
+                    <ArrowUpRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                }
+              />
+              <div className="px-6 pb-5 pt-4">
+                {recsError ? (
+                  <p className="text-sm text-warn">{recsError}</p>
+                ) : recs ? (
+                  <>
+                    {satisfaction !== null && (
+                      <div className="mb-4">
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className="text-[13px] font-medium text-ink-2">
+                            Appliances at full runtime
+                          </span>
+                          <span className="num text-[13px] font-bold text-accent-ink">
+                            {satisfaction.toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-white/50">
+                          <div
+                            className="h-full rounded-full bg-accent transition-all duration-700"
+                            style={{ width: `${satisfaction}%` }}
+                          />
+                        </div>
+                        <p className="mt-1.5 text-[11px] text-ink-3">
+                          {essentials.length} essential, {recs.allocations.length - essentials.length} adjustable
+                        </p>
+                      </div>
+                    )}
+
+                    <ul className="space-y-2">
+                      {[...recs.allocations]
+                        .sort((a, b) => Number(b.is_essential) - Number(a.is_essential))
+                        .slice(0, 4)
+                        .map((a) => (
+                          <ApplianceRow key={a.appliance_id} a={a} />
+                        ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="py-8 text-center text-sm text-ink-3">No plan yet.</p>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* ---- phase dial, tucked under as a narrow strip ---- */}
+          <Card className="rise d6">
+            <div className="flex flex-col items-center gap-5 px-6 py-5 sm:flex-row sm:items-center">
+              <div className="w-full max-w-[190px] shrink-0">
                 <PhaseDial
                   powerFactor={telemetry?.power_factor ?? null}
                   voltage={telemetry?.voltage ?? null}
                   current={telemetry?.current ?? null}
-                  stale={readingIsStale}
+                  stale={stale}
                 />
               </div>
-            </Card>
-          </div>
-
-          <Card className="rise d5">
-            <CardHead
-              title="Consumption trend"
-              hint="Cumulative kWh against the budget ceiling, carried to cycle end"
-              action={
-                <span className="rounded-[var(--r-pill)] bg-white/55 px-3.5 py-1.5 text-[11px] font-semibold text-ink-2">
-                  This cycle
-                </span>
-              }
-            />
-            <TrendChart
-              days={daily}
-              predictedKwh={prediction?.predicted_kwh ?? null}
-              predictedBillEgp={prediction?.predicted_bill_egp ?? null}
-              allowedKwh={allowedKwh}
-              cycleLengthDays={prediction?.cycle_length_days ?? null}
-            />
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-semibold text-ink">Phase angle</h2>
+                <p className="mt-1 max-w-prose text-[13px] leading-relaxed text-ink-3">
+                  Power factor is the angle between the voltage and current waveforms —
+                  PF = cos&nbsp;φ. Near 1.0 almost all the power drawn is doing real work;
+                  a falling value means motors and compressors pulling reactive current.
+                </p>
+              </div>
+            </div>
           </Card>
-
-          {/* ---- the money row ---- */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="rise d6 p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-                Predicted bill
-              </p>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="num text-[34px] font-bold leading-none text-accent-ink">
-                  {prediction ? prediction.predicted_bill_egp.toFixed(0) : "--"}
-                </span>
-                <span className="text-sm font-semibold text-ink-3">EGP</span>
-              </div>
-              {prediction && (
-                <>
-                  <p className="mt-1.5 text-xs text-ink-3">
-                    {prediction.predicted_kwh.toFixed(0)} kWh ·{" "}
-                    {prediction.days_remaining_in_cycle} days left
-                  </p>
-                  <div className="mt-4">
-                    <div className="mb-1.5 flex justify-between text-[10px] text-ink-3">
-                      <span className="num">
-                        {prediction.confidence_bill_low_egp.toFixed(0)}
-                      </span>
-                      <span className="font-semibold">80% range</span>
-                      <span className="num">
-                        {prediction.confidence_bill_high_egp.toFixed(0)}
-                      </span>
-                    </div>
-                    <div className="relative h-2.5 rounded-full bg-white/50">
-                      <div className="absolute inset-0 rounded-full bg-accent/60" />
-                      <div
-                        className="absolute top-1/2 h-4 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-panel"
-                        style={{ left: `${markerPct}%` }}
-                        title={`Point estimate ${prediction.predicted_bill_egp.toFixed(0)} EGP`}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-            </Card>
-
-            <Card className="rise d6 p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-                Spent so far
-              </p>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="num text-[34px] font-bold leading-none text-ink">
-                  {prediction ? prediction.bill_so_far_egp.toFixed(0) : "--"}
-                </span>
-                <span className="text-sm font-semibold text-ink-3">EGP</span>
-              </div>
-              {prediction && (
-                <p className="mt-1.5 text-xs text-ink-3">
-                  {prediction.kwh_so_far.toFixed(1)} kWh billed to date
-                </p>
-              )}
-              {prediction &&
-                prediction.tariff_position.price_per_kwh_current !== null && (
-                  <p className="mt-4 rounded-xl bg-white/45 p-3 text-[11px] leading-relaxed text-ink-2">
-                    Bracket{" "}
-                    <span className="font-bold">
-                      {prediction.tariff_position.active_bracket}
-                    </span>{" "}
-                    at {prediction.tariff_position.price_per_kwh_current} EGP/kWh
-                  </p>
-                )}
-            </Card>
-
-            <Card className="rise d6 p-5">
-              <div className="flex items-start justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-                  Budget used
-                </p>
-                <Link
-                  href="/recommendations"
-                  aria-label="Open today's plan"
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
-                >
-                  <ArrowUpRight className="h-4 w-4" aria-hidden />
-                </Link>
-              </div>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span
-                  className={clsx(
-                    "num text-[34px] font-bold leading-none",
-                    usedPct >= 90
-                      ? "text-warn"
-                      : usedPct >= threshold
-                        ? "text-accent-ink"
-                        : "text-ok",
-                  )}
-                >
-                  {recs ? usedPct.toFixed(0) : "--"}
-                </span>
-                <span className="text-sm font-semibold text-ink-3">%</span>
-              </div>
-              {recs && (
-                <>
-                  <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/50">
-                    <div
-                      className={clsx(
-                        "h-full rounded-full transition-all duration-700",
-                        usedPct >= 90
-                          ? "bg-warn"
-                          : usedPct >= threshold
-                            ? "bg-accent"
-                            : "bg-ok",
-                      )}
-                      style={{ width: `${barPct}%` }}
-                    />
-                  </div>
-                  {overTargetEgp !== null && (
-                    <p className="mt-2.5 text-[11px] leading-relaxed">
-                      {overTargetEgp > 0 ? (
-                        <span className="text-warn">
-                          Overshooting by{" "}
-                          <strong className="num">{overTargetEgp.toFixed(0)} EGP</strong>
-                        </span>
-                      ) : (
-                        <span className="text-ok">
-                          Under target by{" "}
-                          <strong className="num">
-                            {Math.abs(overTargetEgp).toFixed(0)} EGP
-                          </strong>
-                        </span>
-                      )}
-                    </p>
-                  )}
-                </>
-              )}
-            </Card>
-          </div>
-
-          {/* ---- method + today's plan ---- */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            {predictionError ? (
-              <Card className="!border-warn/35 p-5 text-sm text-warn">{predictionError}</Card>
-            ) : (
-              prediction && (
-                <Card className="p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-                    Method
-                  </p>
-                  <p className="mt-2 text-sm font-bold text-ink">
-                    {prediction.prediction_method === "model"
-                      ? "LightGBM model"
-                      : "Naive baseline"}
-                  </p>
-                  {prediction.prediction_method === "model" ? (
-                    <p className="mt-2 text-xs leading-relaxed text-ink-3">
-                      Naive baseline says {prediction.naive_prediction_kwh.toFixed(1)} kWh; the
-                      model corrects it by {prediction.model_correction_kwh >= 0 ? "+" : ""}
-                      {prediction.model_correction_kwh.toFixed(2)} kWh.
-                    </p>
-                  ) : (
-                    <p className="mt-2 text-xs font-medium leading-relaxed text-warn">
-                      Model withheld: {prediction.fallback_reason}
-                    </p>
-                  )}
-                  <p className="num mt-3 text-[10px] text-ink-3">{prediction.model_version}</p>
-                  {prediction.data_quality.warning && (
-                    <p className="mt-2 text-xs font-medium text-warn">
-                      {prediction.data_quality.warning}
-                    </p>
-                  )}
-                  <p className="mt-2 text-[11px] text-ink-3">
-                    {prediction.data_quality.days_with_readings}/
-                    {prediction.data_quality.days_elapsed} elapsed days carry telemetry
-                    {prediction.data_quality.days_missing > 0 &&
-                      ` (${prediction.data_quality.days_missing} missing)`}
-                    .
-                  </p>
-                  <p className="mt-2 text-[11px] leading-relaxed text-ink-3">
-                    {prediction.confidence_label}. Basis: {prediction.confidence_basis}.
-                  </p>
-                </Card>
-              )
-            )}
-
-            {recsError ? (
-              <Card className="!border-warn/35 p-5 text-sm text-warn">
-                {recsError}
-                <div className="mt-3">
-                  <Link
-                    href="/budget"
-                    className="inline-flex items-center gap-1.5 rounded-[var(--r-pill)] bg-ink-panel px-4 py-2 text-xs font-semibold text-on-dark transition hover:opacity-90"
-                  >
-                    Set a target bill <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </Card>
-            ) : (
-              recs && (
-                <Card className="p-5">
-                  <div className="mb-3.5 flex items-center justify-between">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-                      Today&apos;s plan
-                    </p>
-                    <Link
-                      href="/recommendations"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-accent-ink hover:underline"
-                    >
-                      Full plan <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </div>
-
-                  {topRecommendations.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-ink-3">
-                      No appliances registered yet.
-                    </p>
-                  ) : (
-                    <ul className="space-y-2.5">
-                      {topRecommendations.map((a) => (
-                        <li
-                          key={a.appliance_id}
-                          className={clsx(
-                            "rounded-xl p-3.5",
-                            a.is_essential ? "panel-ink text-on-dark" : "bg-white/50 text-ink",
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="flex items-center gap-1.5 text-sm font-bold">
-                              {a.is_essential && (
-                                <Lock
-                                  className="h-3.5 w-3.5 shrink-0 text-accent"
-                                  aria-label="Essential — never restricted"
-                                />
-                              )}
-                              {a.name}
-                            </span>
-                            <span className="num shrink-0 text-sm font-bold">
-                              {a.recommended_runtime_hours} h
-                            </span>
-                          </div>
-                          <p
-                            className={clsx(
-                              "mt-1 text-xs",
-                              a.is_essential ? "text-on-dark-2" : "text-ink-3",
-                            )}
-                          >
-                            {a.action_note}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </Card>
-              )
-            )}
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/** A label/value row inside the charcoal Overview panel. */
+function ApplianceRow({ a }: { a: Allocation }) {
+  const Icon = applianceIcon(a.name);
+  const badge = a.is_essential
+    ? { text: "essential", cls: "bg-accent text-ink-panel" }
+    : a.status === "shed" || a.status === "away"
+      ? { text: "skip today", cls: "bg-warn-wash text-warn" }
+      : a.status === "constrained"
+        ? { text: "reduced", cls: "bg-accent-wash text-accent-ink" }
+        : { text: a.priority.toLowerCase(), cls: "bg-white/70 text-ink-3" };
+
+  return (
+    <li
+      className={clsx(
+        "flex items-center gap-3 rounded-xl p-3",
+        a.is_essential ? "border-l-[3px] border-accent-2 bg-white/60" : "bg-white/45",
+      )}
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/80 text-ink-2">
+        <Icon className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 truncate text-[13px] font-bold text-ink">
+          {a.is_essential && <Lock className="h-3 w-3 shrink-0 text-accent-ink" aria-label="Essential" />}
+          {a.name}{" "}
+          <span className="num font-semibold text-ink-3">({a.recommended_runtime_hours}h/day)</span>
+        </p>
+        <p className="num mt-0.5 text-[11px] text-ink-3">{a.estimated_kwh.toFixed(2)} kWh</p>
+      </div>
+      <span className={clsx("shrink-0 rounded-[var(--r-pill)] px-2.5 py-1 text-[10px] font-bold", badge.cls)}>
+        {badge.text}
+      </span>
+    </li>
+  );
+}
+
+function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">{label}</dt>
+      <dd className={clsx("mt-1 font-bold text-ink", mono ? "num text-[11px]" : "num text-[15px]")}>
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 function InkRow({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <dt className="text-xs text-on-dark-2">{label}</dt>
       <dd className="num text-sm font-bold text-on-dark">
         {value}
-        <span className="ml-1 text-[11px] font-semibold text-on-dark-2">{unit}</span>
+        <span className="ml-1 text-[10px] font-semibold text-on-dark-2">{unit}</span>
       </dd>
     </div>
   );
