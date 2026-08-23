@@ -3,15 +3,22 @@
 Real-time household electricity monitoring with month-end bill prediction, Egypt
 tiered-tariff costing, and budget-aware appliance recommendations.
 
-**Competition track:** IoT (primary) + AI (supporting)
+**Competition track:** Intelligent Systems and AI (primary) + Internet of Things (supporting)
+
+> **Hardware status.** The ESP32 and its sensors are on order and not yet in hand,
+> so no firmware is in this repository. Everything below runs today against
+> `backend/scripts/mock_esp32.py`, which publishes over the same MQTT topic and
+> the same JSON contract the real meter will use, so the device is the only
+> component that changes when the hardware arrives. See SUBMISSION_STATUS.md §12.
 
 ---
 
 ## What it does
 
 An ESP32 with current/voltage sensors measures household power draw and publishes
-telemetry over MQTT. A FastAPI backend ingests it into PostgreSQL, rolls it up into
-hourly and daily aggregates, and uses that history to:
+telemetry over MQTT — today that publisher is the simulator, pending hardware. A
+FastAPI backend ingests it into PostgreSQL, rolls it up into hourly and daily
+aggregates, and uses that history to:
 
 1. **Predict the month-end bill** — a LightGBM model, benchmarked against a naive
    extrapolation baseline with honestly reported error (see *Model performance*).
@@ -20,8 +27,10 @@ hourly and daily aggregates, and uses that history to:
 3. **Recommend appliance usage** — a greedy allocator that keeps you inside a daily
    budget while never restricting appliances marked essential.
 
-A Next.js dashboard presents live power, the predicted bill with a confidence range,
-and the day's recommendations.
+A Next.js frontend presents this as three screens: **Overview** (live power → predicted
+bill with its confidence range → what to do about it), **Budget Planner** (a target
+bill in, the kWh it allows out), and **Recommendations** (today's per-appliance plan,
+with essential appliances shown locked).
 
 ---
 
@@ -76,18 +85,23 @@ backend/
       recommendation/        Greedy budget-aware appliance allocator
     workers/
       telemetry_worker.py    MQTT subscriber → telemetry_raw
-      aggregation_worker.py  Periodic hourly/daily rollups
+      aggregation_worker.py  Hourly/daily rollups (local-day buckets)
+      prediction_snapshot.py Daily bill-forecast snapshots → bills_predicted
   ml/
     training/
       prepare_public_dataset.py   UCI dataset → engineered feature rows
       train_model.py              Chronological validation + acceptance gate
     models/                       Trained model artifact (.pkl)
-  db/schema.sql              Reference DDL (mirrors models.py)
+  db/schema.sql              Authoritative DDL — a SUPERSET of models.py
   scripts/mock_esp32.py      Telemetry simulator for demos without hardware
-  tests/                     pytest suite — tariff, recommendation engine
+  tests/                     pytest suite — tariff, recommendation engine,
+                             telemetry contract, billing-cycle boundaries
 
 frontend/
-  src/app/                   Next.js App Router pages
+  src/app/overview/          Live gauge → predicted bill → budget + plan
+  src/app/budget/            Target bill → allowed kWh (via /tariff/allowance)
+  src/app/recommendations/   Per-appliance plan; essentials rendered locked
+  src/components/            Shell (auth guard + nav), PowerGauge, AlertBanner
   src/lib/                   API client (axios + JWT interceptor)
 ```
 
@@ -112,15 +126,43 @@ pip install -r requirements.txt
 
 Copy-Item .env.example .env   # then edit .env and set a real SECRET_KEY
 
-python create_tables.py       # creates tables from models.py
+# Create the schema. Use schema.sql — it is the authoritative DDL and a superset
+# of models.py: it also creates tariff_brackets and recommendations (which have
+# no ORM model), plus the DB-level DEFAULT gen_random_uuid() and CHECK
+# constraints that SQLAlchemy's create_all does not emit.
+# Every statement is IF NOT EXISTS / ON CONFLICT DO NOTHING, so it is safe to
+# re-run against an existing database.
+Get-Content db\schema.sql -Raw | docker exec -i smart_meter_postgres `
+    psql -U smart_meter_user -d smart_meter -v ON_ERROR_STOP=1
+
 uvicorn app.main:app --reload # API on :8000, docs at /docs
 ```
 
-Run the two workers in separate terminals (both need the venv active):
+`python create_tables.py` does the same thing from inside the venv — it applies
+`db/schema.sql` and then verifies all ten tables exist. It no longer builds the
+schema from `models.py`; doing that produced a database without the DB-level
+defaults and CHECK constraints, which `CREATE TABLE IF NOT EXISTS` then made
+permanent by skipping those tables on any later repair. Either command is fine.
+
+The API does **not** create tables on startup. It checks the schema and logs which
+tables are missing, so a half-built database is reported rather than silently
+extended.
+
+> **The venv is machine-specific — never copy it between computers.**
+> `venv/pyvenv.cfg` records an absolute path to the Python that created it, so a
+> venv copied from a teammate's machine fails with
+> `No Python at '...'` and nothing in the project will run. It is gitignored for
+> this reason. If you receive this project as a folder rather than a clone, delete
+> `backend/venv` and rebuild it with the three commands above — everything needed
+> is in `requirements.txt`.
+
+Run the workers in separate terminals (all need the venv active):
 
 ```powershell
-python -m app.workers.telemetry_worker     # MQTT → database
-python -m app.workers.aggregation_worker   # hourly/daily rollups
+python -m app.workers.telemetry_worker           # MQTT → database
+python -m app.workers.aggregation_worker         # hourly/daily rollups, 60s loop
+python -m app.workers.aggregation_worker --once --all   # one-off full rebuild
+python -m app.workers.prediction_snapshot        # log today's forecast (run daily)
 ```
 
 ### 3. Frontend
@@ -171,10 +213,35 @@ not shipped.
 
 ### Model performance
 
-> **Status: being finalised.** Real measured MAE/MAPE for both the naive baseline
-> and the LightGBM model will be recorded here, produced by
-> `python -m ml.training.train_model`. No numbers are published in this README
-> until they come from an actual validation run.
+Measured by `python -m ml.training.train_model` on the public UCI dataset
+aggregated to daily kWh, chronological walk-forward. Errors are in kWh over a
+full billing cycle.
+
+| Range | Naive MAE | Model MAE | Naive MAPE | Model MAPE | Improvement | Cycles beaten |
+|---|---|---|---|---|---|---|
+| Day 3–30 (5880 preds / 210 folds) | 50.52 | 41.88 | 7.26% | 6.27% | +17.10% | 161/210 (77%) |
+| **Day 15–30 — the judged gate** | **26.30** | **23.47** | **3.69%** | **3.42%** | **+10.75%** | **146/210 (70%)** |
+| Day 3–14 | 82.81 | 66.42 | 12.02% | 10.07% | +19.79% | 161/210 (77%) |
+
+Day 15–30 is the range the gate is set on, because that is where the naive
+baseline is strong and beating it means something. A disjoint-cycle cross-check
+gives +11.15% at the same range.
+
+**Three things to read before quoting these numbers:**
+
+- **The margin is real but thin.** +10.75% against a 10.0% minimum, and on the
+  disjoint set it wins on only 59% of individual cycles — it wins by larger
+  margins on the cycles it wins rather than winning consistently.
+- **The demo dashboard is not the accuracy evidence.** On the seeded synthetic
+  backfill the model's correction is under 1% of the naive figure, because that
+  series is near-stationary and a rolling average is already close to optimal on
+  it. The claim rests on the pooled walk-forward result over real household
+  variation, not on any number visible on screen.
+- **The training data is a French household, not an Egyptian one.** No public
+  Egyptian per-household dataset of comparable granularity exists.
+
+Full caveats, including the selection pressure in that figure, are in
+[SUBMISSION_STATUS.md](SUBMISSION_STATUS.md).
 
 ---
 
@@ -192,6 +259,8 @@ cd backend
 .\venv\Scripts\python.exe -m pytest tests/ -v
 ```
 
-Covers progressive tariff maths (including kWh → EGP → kWh round-trips and bracket
-boundaries) and the recommendation engine's budget and essential-appliance
-guarantees.
+151 tests. Covers progressive tariff maths (kWh → EGP → kWh round-trips and bracket
+boundaries), billing-cycle boundaries across 28/29/30/31-day months, the telemetry
+data contract, and the recommendation engine's two hard guarantees: an essential
+appliance always receives its full runtime in every mode including *away*, and the
+plan never exceeds its allowance.

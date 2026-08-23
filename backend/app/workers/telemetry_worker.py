@@ -1,26 +1,37 @@
 """
 MQTT telemetry ingestion worker.
 
-Subscribes to home/+/telemetry, resolves each incoming packet's
-"device_id" (an external_id string like "esp32_meter_01") against the
-Device table, inserts a row into telemetry_raw, and updates
-Device.last_seen_at — the single source of truth used by
-telemetry.py's is_online check.
+Subscribes to home/+/telemetry and hands each packet to
+app/services/telemetry/ingest.py — the SAME function POST /telemetry uses. This
+worker is deliberately thin: it owns the MQTT transport and nothing else.
+
+Validation, external_id resolution, timestamp handling, duplicate suppression
+and last_seen_at updates all live in the shared ingest service. When this file
+carried its own copy of the insert it also carried its own bug: it stamped every
+row with datetime.now(), discarding the device's own timestamp, so a meter that
+buffered readings through a Wi-Fi outage had the whole backlog land on the minute
+it reconnected.
 
 Run as a standalone long-running process, separate from the API server:
     python -m app.workers.telemetry_worker
 """
 
-import os
 import json
-from datetime import datetime, timezone
-from dotenv import load_dotenv
+import logging
+import os
+
 import paho.mqtt.client as mqtt
-from sqlalchemy import text
+from dotenv import load_dotenv
 
 from app.core.database import SessionLocal
+from app.services.telemetry.ingest import (
+    ingest_reading, TelemetryValidationError,
+)
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+logger = logging.getLogger("telemetry_worker")
 
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
@@ -43,61 +54,28 @@ def on_message(client, userdata, msg):
         print(f"[!] Failed to parse message payload: {e}")
         return
 
-    external_id = payload.get("device_id")
-    if not external_id:
-        print("[!] Skipping message: missing device_id field")
-        return
-
     db = SessionLocal()
     try:
-        # Resolve external_id -> internal UUID device_id
-        device_row = db.execute(
-            text("SELECT device_id FROM devices WHERE external_id = :ext_id"),
-            {"ext_id": external_id},
-        ).mappings().first()
+        result = ingest_reading(db, payload)
 
-        if not device_row:
-            print(f"[!] Received telemetry for unregistered device '{external_id}' — skipping")
-            return
+        if not result.stored:
+            # Normal under at-least-once delivery, not a fault.
+            print(f"[=] {payload.get('device_id')} duplicate reading at {result.ts} — ignored")
+        else:
+            flag = "" if result.timestamp_source == "device" else "  (no device timestamp)"
+            print(
+                f"[OK] {payload.get('device_id')} -> {payload.get('power_w')} W | "
+                f"{result.energy_wh_delta} Wh delta @ {result.ts.isoformat()}{flag}"
+            )
 
-        device_uuid = device_row["device_id"]
-        now_utc = datetime.now(timezone.utc)
-
-        db.execute(
-            text("""
-                INSERT INTO telemetry_raw (
-                    device_id, ts, voltage_rms, current_rms, power_w,
-                    power_factor, energy_wh_delta, is_backfilled, received_at
-                ) VALUES (
-                    :device_id, :ts, :voltage, :current, :power,
-                    :pf, :wh_delta, :backfilled, :received_at
-                )
-            """),
-            {
-                "device_id": str(device_uuid),
-                "ts": now_utc,
-                "voltage": payload.get("voltage_rms"),
-                "current": payload.get("current_rms"),
-                "power": payload.get("power_w"),
-                "pf": payload.get("power_factor"),
-                "wh_delta": payload.get("energy_wh_delta", 0.0),
-                "backfilled": payload.get("is_backfilled", False),
-                "received_at": now_utc,
-            },
-        )
-
-        # Single source of truth for online/offline status — updated on
-        # every successfully ingested packet, in the same transaction
-        # as the telemetry insert so they can never drift apart.
-        db.execute(
-            text("UPDATE devices SET last_seen_at = :ts WHERE device_id = :device_id"),
-            {"ts": now_utc, "device_id": str(device_uuid)},
-        )
-
-        db.commit()
-        print(f"[✓] {external_id} -> {payload.get('power_w')} W | {payload.get('energy_wh_delta')} Wh delta")
-
-    except Exception as e:
+    except TelemetryValidationError as e:
+        # Contract violation: log the specific field and drop the packet. Do not
+        # store a partially-valid reading — every aggregate downstream would
+        # inherit the corruption.
+        print(f"[!] Rejected packet from '{payload.get('device_id')}': {e}")
+    except LookupError as e:
+        print(f"[!] {e} — skipping")
+    except Exception as e:  # noqa: BLE001 - the worker must survive one bad packet
         db.rollback()
         print(f"[!] Database error while ingesting packet: {e}")
     finally:

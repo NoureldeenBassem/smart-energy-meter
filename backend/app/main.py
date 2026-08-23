@@ -1,21 +1,100 @@
 """
-Application entry point. Wires together all routers, CORS, and
-(optionally) table creation on startup for local development.
+Application entry point. Wires together all routers and CORS.
+
+WHY THIS DOES NOT CREATE TABLES
+===============================
+`db/schema.sql` is the authoritative DDL, and this app deliberately does NOT run
+`Base.metadata.create_all()` on startup.
+
+Doing so was the mechanism behind the schema divergence in SUBMISSION_STATUS.md
+§5. `create_all()` can only create tables that have an ORM model, and it emits no
+database-level `DEFAULT gen_random_uuid()` and no CHECK constraints. So an
+API-first boot against an empty database produced a partial schema — and because
+`schema.sql` is written with `CREATE TABLE IF NOT EXISTS`, running it afterwards
+silently SKIPPED every table the ORM had already made, leaving them permanently
+without their defaults and constraints.
+
+That failure is quiet and it is durable: nothing errors at boot, and the missing
+default only surfaces later as a not-null violation on an `INSERT ... RETURNING`
+issued outside the ORM. Both missing ORM models have since been added, so
+`create_all()` would now produce all ten tables — but it would still produce them
+without the DB-level defaults, so the trap remains. One authoritative source of
+DDL, applied deliberately, is the fix.
+
+Instead, startup CHECKS the schema and reports what is missing. A clear message
+naming the command to run beats a half-built database that looks fine.
 """
+
+import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core.database import Base, engine
-from app.models import models  # noqa: F401 — registers all models with Base before create_all
+from app.models import models  # noqa: F401 — registers all models with Base
 
 from app.api.routes import auth, tariff, budgets, appliances, telemetry, devices, predictions
+
+logger = logging.getLogger(__name__)
+
+# The ten tables db/schema.sql declares. Checked, never created, at startup.
+EXPECTED_TABLES = {
+    "users", "devices", "telemetry_raw", "telemetry_hourly", "telemetry_daily",
+    "tariff_brackets", "bills_predicted", "budgets", "appliances", "recommendations",
+}
+
+SCHEMA_HELP = (
+    "Apply the authoritative schema before starting the API:\n"
+    r"  Get-Content db\schema.sql -Raw | docker exec -i smart_meter_postgres "
+    "psql -U smart_meter_user -d smart_meter -v ON_ERROR_STOP=1"
+)
+
+
+def verify_schema() -> None:
+    """
+    Report which expected tables are missing. Never creates anything.
+
+    Non-fatal by design: the API must still start so that /health and /docs are
+    reachable while the database is being set up. The log line is loud enough to
+    find, and every route that needs a missing table will fail loudly anyway.
+    """
+    try:
+        with engine.connect() as conn:
+            found = {
+                row[0] for row in conn.execute(text(
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_schema = 'public'"
+                ))
+            }
+    except Exception as exc:
+        logger.warning("Could not verify database schema (database unreachable?): %s", exc)
+        return
+
+    missing = EXPECTED_TABLES - found
+    if missing:
+        logger.error(
+            "Database is missing %d expected table(s): %s\n%s",
+            len(missing), ", ".join(sorted(missing)), SCHEMA_HELP,
+        )
+    else:
+        logger.info("Database schema verified — all %d expected tables present.", len(EXPECTED_TABLES))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # `@app.on_event("startup")` is deprecated in FastAPI 0.115; lifespan is the
+    # supported replacement and gives shutdown a place to live if it is needed.
+    verify_schema()
+    yield
 
 
 app = FastAPI(
     title="Smart Energy Meter API",
     version="1.0.0",
     description="IoT Smart Energy Meter backend — tariff engine, recommendation engine, telemetry ingestion.",
+    lifespan=lifespan,
 )
 
 # CORS — restricted to the local Next.js dev server, not a wildcard.
@@ -36,13 +115,6 @@ app.include_router(appliances.router, prefix="/api/v1")
 app.include_router(telemetry.router, prefix="/api/v1")
 app.include_router(devices.router, prefix="/api/v1")
 app.include_router(predictions.router, prefix="/api/v1")
-
-@app.on_event("startup")
-def on_startup():
-    # Ensures tables exist even if create_tables.py was never run manually.
-    # Safe to call every time — create_all() only creates missing tables,
-    # never touches existing ones.
-    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/health")

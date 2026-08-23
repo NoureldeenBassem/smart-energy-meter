@@ -17,7 +17,7 @@ export default function RootPage() {
     } else if (!deviceId) {
       router.replace("/onboarding");
     } else {
-      router.replace("/dashboard");
+      router.replace("/overview");
     }
     setChecking(false);
   }, [router]);

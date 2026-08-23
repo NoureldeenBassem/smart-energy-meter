@@ -27,6 +27,7 @@ def create_appliance(
         name=payload.name,
         rated_power_w=payload.rated_power_w,
         priority=payload.priority,
+        is_essential=payload.is_essential,
         desired_daily_hours=payload.desired_daily_hours,
     )
     db.add(appliance)
@@ -66,6 +67,7 @@ def update_appliance(
     appliance.name = payload.name
     appliance.rated_power_w = payload.rated_power_w
     appliance.priority = payload.priority
+    appliance.is_essential = payload.is_essential
     appliance.desired_daily_hours = payload.desired_daily_hours
 
     db.commit()

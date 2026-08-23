@@ -23,6 +23,11 @@ __pycache__/
 !*.env.example
 !.env.example
 
+# Locally minted JWTs used for manual endpoint testing. These are real,
+# long-lived bearer tokens — never commit one.
+backend/token.txt
+token.txt
+
 # ---------------------------------------------------------------------------
 # Large datasets — the UCI household power consumption file is ~133 MB,
 # well over GitHub's 100 MB per-file hard limit. It is a public dataset:
@@ -33,8 +38,11 @@ __pycache__/
 backend/ml/data/household_power_consumption.txt
 backend/ml/data/*.zip
 
-# Generated feature table — reproducible from the raw dataset above.
+# Generated feature tables — reproducible from the raw dataset above via
+#   python -m ml.training.prepare_public_dataset              (sliding, stride 5)
+#   python -m ml.training.prepare_public_dataset --stride 30 --out ml/data/rows_disjoint.csv
 backend/ml/data/training_rows.csv
+backend/ml/data/rows_disjoint.csv
 
 # NOTE: backend/ml/models/*.pkl is deliberately NOT ignored. The trained
 # model artifact is part of the submission deliverable so judges can run

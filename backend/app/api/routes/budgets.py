@@ -3,25 +3,26 @@ Budget routes: create/update the user's monthly target, and serve the
 daily appliance recommendation dashboard built on top of it.
 
 Depends on:
-- app/services/tariff_engine/calculator.py  (bill_to_kwh, via the engine)
-- app/services/recommendation/engine.py     (generate_recommendation_dashboard, check_budget_alert)
+- app/services/recommendation/engine.py       (generate_recommendation_dashboard, check_budget_alert)
+- app/services/forecasting/bill_forecast.py   (daily_kwh_this_cycle — the shared
+  "kWh so far this cycle" query, so the budget figure here cannot disagree with
+  the predicted bill shown beside it)
 """
 
 from uuid import UUID
-from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
-from app.models.models import Budget, Appliance, Device, TelemetryRaw
+from app.core.billing_time import cycle_start, today_local
+from app.models.models import Budget, Appliance, Device
 from app.api.schemas import BudgetCreate, BudgetOut, RecommendationDashboardOut
+from app.services.forecasting.bill_forecast import daily_kwh_this_cycle
 from app.services.recommendation.engine import (
     generate_recommendation_dashboard,
     check_budget_alert,
 )
-from app.services.tariff_engine.calculator import bill_to_kwh
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 
@@ -68,17 +69,21 @@ def get_active_budget(
 
 
 def _get_month_to_date_kwh(db: Session, device_id: UUID) -> float:
-    """Sums energy_wh_delta from telemetry_raw for the current calendar month."""
-    result = db.execute(
-        text("""
-            SELECT COALESCE(SUM(energy_wh_delta) / 1000.0, 0) AS kwh
-            FROM telemetry_raw
-            WHERE device_id = :device_id
-              AND ts >= date_trunc('month', now() AT TIME ZONE 'UTC')
-        """),
-        {"device_id": str(device_id)},
-    ).scalar()
-    return float(result or 0.0)
+    """
+    kWh consumed so far in the current BILLING cycle.
+
+    Delegates to the same helper the bill forecast uses, rather than running its
+    own SUM. It previously had its own query bucketed on
+    `date_trunc('month', now() AT TIME ZONE 'UTC')`, which was wrong twice over:
+    the cycle boundary was a UTC month rather than an Africa/Cairo one, and it was
+    a third independent implementation of "kWh so far this cycle" alongside the
+    forecaster's and the aggregation worker's. The recommendation budget and the
+    predicted bill on the same screen could therefore disagree about how much had
+    already been used.
+    """
+    today = today_local()
+    daily = daily_kwh_this_cycle(db, device_id, cycle_start(today), today)
+    return round(sum(daily), 4)
 
 
 @router.get("/recommendations/{device_id}", response_model=RecommendationDashboardOut)
@@ -125,6 +130,7 @@ def get_recommendations(
             "name": a.name,
             "rated_power_w": a.rated_power_w,
             "priority": a.priority,
+            "is_essential": a.is_essential,
             "desired_daily_hours": a.desired_daily_hours,
         }
         for a in appliances

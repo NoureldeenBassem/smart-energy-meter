@@ -18,7 +18,7 @@ export default function OnboardingPage() {
       const online = await waitForDeviceOnline(deviceId);
       setStep(online ? "found" : "not_found");
       if (online) {
-        setTimeout(() => router.push("/dashboard"), 1200);
+        setTimeout(() => router.push("/overview"), 1200);
       }
     } catch {
       setStep("not_found");

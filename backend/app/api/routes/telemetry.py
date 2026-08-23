@@ -14,14 +14,22 @@ earlier versions of this project.
 from datetime import datetime, timezone, timedelta, date
 from uuid import UUID
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+from app.core.billing_time import cycle_start, today_local
 from app.models.models import Device
-from app.api.schemas import TelemetryDashboardOut, HourlyBucket, DailyBucket
+from app.api.schemas import (
+    TelemetryDashboardOut, HourlyBucket, DailyBucket,
+    TelemetryIngestIn, TelemetryIngestOut,
+)
+from app.services.forecasting.bill_forecast import daily_kwh_this_cycle
+from app.services.telemetry.ingest import (
+    ingest_reading, TelemetryValidationError,
+)
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
 
@@ -48,6 +56,55 @@ def _is_online(device: Device) -> bool:
     return elapsed <= ONLINE_HEARTBEAT_THRESHOLD_SECONDS
 
 
+@router.post("", response_model=TelemetryIngestOut, status_code=status.HTTP_202_ACCEPTED)
+def post_telemetry(
+    reading: TelemetryIngestIn,
+    db: Session = Depends(get_db),
+):
+    """
+    HTTP ingestion for one meter reading — the alternative to the MQTT path for
+    devices on networks that block port 1883.
+
+    Validation and insertion are delegated to app/services/telemetry/ingest.py,
+    the SAME function the MQTT worker uses, so an HTTP reading and an MQTT
+    reading of the same packet produce identical rows.
+
+    Returns 202 with stored=false for a reading we already have. A duplicate is
+    NOT an error: MQTT is at-least-once and a device that retries after an
+    unacknowledged publish will legitimately resend. Rejecting it with a 409
+    would make correct firmware log errors during normal operation. The reading
+    is ignored rather than overwritten, so energy_wh_delta is never
+    double-counted into the bill.
+
+    AUTHENTICATION — KNOWN LIMITATION, STATED NOT HIDDEN
+    ----------------------------------------------------
+    This endpoint takes no credentials. A device is not a user, so a user JWT is
+    the wrong instrument, and per-device tokens are not implemented. It matches
+    the existing MQTT posture (the broker allows anonymous publish), so it adds
+    no attack surface beyond what MQTT already has, but on an untrusted network
+    either path would let an attacker inject readings for a registered
+    device_id. Proper device credentials are required before deployment; they
+    are not built. Only a registered external_id is accepted, which limits
+    injection to devices that already exist.
+    """
+    try:
+        result = ingest_reading(db, reading.model_dump())
+    except TelemetryValidationError as exc:
+        # 422: the payload is syntactically fine but violates the data contract.
+        raise HTTPException(status_code=422, detail=str(exc))
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    return TelemetryIngestOut(
+        accepted=True,
+        stored=result.stored,
+        duplicate=not result.stored,
+        device_id=UUID(result.device_uuid),
+        ts=result.ts,
+        timestamp_source=result.timestamp_source,
+    )
+
+
 @router.get("/dashboard/{device_id}", response_model=TelemetryDashboardOut)
 def get_dashboard(
     device_id: UUID,
@@ -70,27 +127,20 @@ def get_dashboard(
     if not latest:
         raise HTTPException(status_code=404, detail="No telemetry data recorded yet for this device")
 
-    now = datetime.now(timezone.utc)
-    today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-    month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
-
-    today_kwh = db.execute(
-        text("""
-            SELECT COALESCE(SUM(energy_wh_delta) / 1000.0, 0)
-            FROM telemetry_raw
-            WHERE device_id = :device_id AND ts >= :today_start
-        """),
-        {"device_id": str(device_id), "today_start": today_start},
-    ).scalar() or 0.0
-
-    month_kwh = db.execute(
-        text("""
-            SELECT COALESCE(SUM(energy_wh_delta) / 1000.0, 0)
-            FROM telemetry_raw
-            WHERE device_id = :device_id AND ts >= :month_start
-        """),
-        {"device_id": str(device_id), "month_start": month_start},
-    ).scalar() or 0.0
+    # "Today" and "this month" are AFRICA/CAIRO days, not UTC ones, and they come
+    # from the same helper the bill forecast and the recommendation budget use.
+    #
+    # This previously bucketed on datetime(now.year, now.month, now.day, tz=utc).
+    # Cairo is UTC+3 in August, so between local midnight and 03:00 the UTC "today"
+    # had not started yet and today_energy_kwh read essentially zero — measured
+    # 0.0673 kWh against the correct 1.5929 kWh. That is the headline number on the
+    # Overview page, so the bug was worst exactly when someone glanced at the
+    # dashboard early in the morning. month_energy_kwh was wrong the same way
+    # (386.5033 UTC vs 387.7244 Cairo) and disagreed with the kwh_so_far printed
+    # beside it by the predicted bill.
+    daily = daily_kwh_this_cycle(db, device_id, cycle_start(today_local()), today_local())
+    today_kwh = daily[-1] if daily else 0.0
+    month_kwh = sum(daily)
 
     return TelemetryDashboardOut(
         device_id=device.device_id,
