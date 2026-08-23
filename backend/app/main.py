@@ -79,7 +79,7 @@ def verify_schema() -> None:
             len(missing), ", ".join(sorted(missing)), SCHEMA_HELP,
         )
     else:
-        logger.info("Database schema verified — all %d expected tables present.", len(EXPECTED_TABLES))
+        logger.info("Database schema verified - all %d expected tables present.", len(EXPECTED_TABLES))
 
 
 @asynccontextmanager

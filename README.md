@@ -259,7 +259,7 @@ cd backend
 .\venv\Scripts\python.exe -m pytest tests/ -v
 ```
 
-151 tests. Covers progressive tariff maths (kWh → EGP → kWh round-trips and bracket
+160 tests. Covers progressive tariff maths (kWh → EGP → kWh round-trips and bracket
 boundaries), billing-cycle boundaries across 28/29/30/31-day months, the telemetry
 data contract, and the recommendation engine's two hard guarantees: an essential
 appliance always receives its full runtime in every mode including *away*, and the

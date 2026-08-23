@@ -6,6 +6,9 @@ alembic==1.13.2
 pydantic==2.9.2
 pydantic[email]==2.9.2
 pydantic-settings==2.5.2
+# Imported directly by app/core/database.py and app/workers/telemetry_worker.py.
+# Declared explicitly rather than relied on as a pydantic-settings transitive.
+python-dotenv==1.0.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
@@ -19,3 +22,6 @@ scikit-learn==1.5.1
 joblib==1.4.2
 pytest==8.3.2
 httpx==0.27.2
+
+# Used by tools/ (demo backfill, telemetry contract checker), which POST to the API.
+requests==2.32.3

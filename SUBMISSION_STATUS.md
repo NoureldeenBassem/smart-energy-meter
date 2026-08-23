@@ -294,7 +294,7 @@ restricting an appliance marked essential**.
 
 ### Status: working and verified
 
-151 tests pass, of which 77 cover this engine
+160 tests pass, of which 77 cover this engine
 (`backend/tests/test_recommendation_engine.py`).
 
 ### A real bug this uncovered: essentials were not protected at all
@@ -361,6 +361,47 @@ hiding it — `within_budget` goes `False` and `budget_note` explains why:
 Silently trimming the fridge to make a budget look achievable, or reporting
 "within budget" while overspending, would both have been dishonest resolutions. An
 unreachable budget is a fact about the budget.
+
+### The same bug again, in the creation path (found later, on a clean database)
+
+The engine fix above was verified against the demo account — and the demo account
+was **migrated**, by `UPDATE appliances SET is_essential = TRUE WHERE priority =
+'High'`. Registration, which *creates* appliances, was never updated to match.
+
+`auth.py` seeded a starter refrigerator with `priority="High"` and no
+`is_essential`, so the column took its `DEFAULT FALSE`. The result: the migrated
+demo account was protected and **every newly registered account was not**.
+
+Measured on a fresh registration against the live API, seeded starter appliances,
+900 EGP target:
+
+| Mode | Seeded refrigerator runtime | Status |
+|---|---|---|
+| normal | 19.6 h | `constrained` |
+| eco | **5.7 h** | `constrained` |
+| away | **0.0 h** | `away` |
+
+That is the original §4 bug, intact, reachable by anyone who registers an account
+— including a judge trying the system for themselves.
+
+**Why the test suite did not catch it.** Every engine test constructs its own
+appliance fixtures and passes `is_essential` explicitly, so the guarantee was
+tested thoroughly against hand-built inputs and never against the inputs the
+application actually creates. The bug lived in the gap between the two.
+
+**The fix.** The seed set moved out of the request handler into
+`STARTER_APPLIANCE_SPECS` at module level in `auth.py`, with `is_essential` set
+explicitly on every entry, and `tests/test_starter_appliances.py` now pins it —
+9 tests, including a parametrised run of the real allocator over the real seed
+data in all four modes, and a zero-budget case. Suite total: **160 tests.**
+
+Verified afterwards on a genuinely fresh registration: refrigerator
+`is_essential = t`, air conditioner `is_essential = f`.
+
+**The transferable lesson is the same one as §7.** A defect was fixed at one site
+and the same wrong assumption survived at another, because the question — "is
+this appliance protected?" — was answered in two places. Migrating existing rows
+and creating new ones were treated as separate problems when they were one.
 
 ### Smaller correctness fix
 
