@@ -35,16 +35,16 @@ export function ThresholdBar({
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
-        <span className="truncate text-[13px] font-medium text-ink-soft">{label}</span>
+        <span className="truncate text-[13px] font-medium text-ink-2">{label}</span>
         <span
           className={clsx(
             "num shrink-0 text-[13px] font-semibold",
             state === "warn"
               ? "text-warn"
               : state === "active"
-                ? "text-accent-deep"
+                ? "text-accent-ink"
                 : state === "muted"
-                  ? "text-ink-muted"
+                  ? "text-ink-3"
                   : "text-ink",
           )}
         >
@@ -53,7 +53,7 @@ export function ThresholdBar({
       </div>
 
       <div
-        className="relative h-2.5 w-full overflow-hidden rounded-full bg-bg-deep"
+        className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/45"
         role="img"
         aria-label={`${label}: ${valueText}`}
       >
@@ -74,8 +74,8 @@ export function ThresholdBar({
               : state === "active"
                 ? "bg-accent"
                 : state === "muted"
-                  ? "bg-ink-muted/45"
-                  : "bg-ink-soft",
+                  ? "bg-ink-3/35"
+                  : "bg-ink-2",
           )}
           style={{ width: `${pct}%` }}
         />
@@ -88,7 +88,7 @@ export function ThresholdBar({
         )}
       </div>
 
-      {note && <p className="mt-1 text-[11px] text-ink-muted">{note}</p>}
+      {note && <p className="mt-1 text-[11px] text-ink-3">{note}</p>}
     </div>
   );
 }

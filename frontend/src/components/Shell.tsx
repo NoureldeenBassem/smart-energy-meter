@@ -3,25 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Zap, LogOut, LayoutGrid, Wallet, ListChecks } from "lucide-react";
+import { LayoutGrid, Wallet, ListChecks, LogOut, Settings } from "lucide-react";
 import { clsx } from "clsx";
 
+import Logo from "@/components/Logo";
 import { fetchIsOnline } from "@/lib/api";
 
 /**
  * Auth guard + chrome shared by every signed-in page.
  *
  * The guard is unchanged: no token -> /auth, token but no device -> /onboarding,
- * and nothing renders until the check has run so a signed-out visitor never sees
- * a flash of the real UI.
+ * and nothing renders until the check has run, so a signed-out visitor never
+ * sees a flash of the real UI. `children` is a function of the resolved
+ * deviceId so no page re-reads localStorage or handles the null case itself.
  *
- * `children` is a function of the resolved deviceId, so no page re-reads
- * localStorage or handles the null case itself.
- *
- * NAV STYLE
- * ---------
- * The active item sits in a solid dark pill. `aria-current="page"` is still what
- * carries that meaning to assistive tech — the pill is the visual half only.
+ * NAVIGATION
+ * ----------
+ * A floating glass bar: mark and wordmark left, a segmented pill group centred,
+ * status and account right. The active item sits in a solid charcoal pill with
+ * its icon — but `aria-current="page"` is what actually carries that meaning.
+ * The pill is the visual half only.
  */
 
 const NAV = [
@@ -44,7 +45,6 @@ export default function Shell({
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const storedDeviceId = localStorage.getItem("device_id");
-
     if (!token) {
       router.replace("/auth");
       return;
@@ -58,8 +58,7 @@ export default function Shell({
   }, [router]);
 
   // Online badge polls on its own short interval, independent of whatever the
-  // page is fetching. Cheap endpoint, and it keeps the badge responsive even on
-  // a page that only loads its data once.
+  // page is fetching — it stays responsive even on a page that loads once.
   useEffect(() => {
     if (!deviceId) return;
     let cancelled = false;
@@ -87,88 +86,85 @@ export default function Shell({
 
   if (!checked || !deviceId) {
     return (
-      <div className="grid min-h-screen place-items-center bg-bg">
-        <Zap className="h-8 w-8 animate-pulse text-accent-deep" />
+      <div className="grid min-h-screen place-items-center">
+        <span className="pulse-dot h-9 w-9 rounded-full bg-accent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
-      <header className="sticky top-0 z-30 bg-bg/85 backdrop-blur">
-        <div className="mx-auto max-w-[1400px] px-4 py-3 sm:px-6">
-          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-pill)] bg-surface px-3 py-2 shadow-[var(--shadow-card)]">
-            {/* brand */}
-            <Link href="/overview" className="flex shrink-0 items-center gap-2.5 pl-1">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent">
-                <Zap className="h-[18px] w-[18px] text-surface-ink" aria-hidden />
-              </span>
-              <span className="hidden text-[15px] font-bold tracking-tight sm:block">
-                Smart Meter
-              </span>
-            </Link>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5 sm:pt-5">
+        <div className="mx-auto flex max-w-[1560px] items-center justify-between gap-3 rounded-[var(--r-pill)] glass-strong px-3 py-2.5">
+          <Link href="/overview" className="shrink-0 pl-0.5">
+            <Logo size={38} />
+          </Link>
 
-            {/* nav pills */}
-            <nav aria-label="Primary" className="min-w-0 flex-1">
-              <ul className="flex items-center justify-center gap-1 overflow-x-auto">
-                {NAV.map((item) => {
-                  const active = pathname === item.href;
-                  const Icon = item.icon;
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? "page" : undefined}
+          <nav aria-label="Primary" className="min-w-0 flex-1">
+            <ul className="mx-auto flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[var(--r-pill)] bg-white/45 p-1.5">
+              {NAV.map((item) => {
+                const active = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={clsx(
+                        "flex items-center gap-2 whitespace-nowrap rounded-[var(--r-pill)] px-3 py-2 text-[13px] font-semibold transition-all duration-300 sm:px-4",
+                        active
+                          ? "bg-ink-panel text-on-dark shadow-md"
+                          : "text-ink-3 hover:bg-white/70 hover:text-ink",
+                      )}
+                    >
+                      <span
                         className={clsx(
-                          "flex items-center gap-2 whitespace-nowrap rounded-[var(--radius-pill)] px-3.5 py-2 text-[13px] font-semibold transition sm:px-4",
-                          active
-                            ? "bg-surface-ink text-ink-onDark shadow-sm"
-                            : "text-ink-muted hover:bg-surface-muted hover:text-ink",
+                          "grid h-6 w-6 shrink-0 place-items-center rounded-full transition-colors",
+                          active ? "bg-accent text-ink-panel" : "text-ink-3",
                         )}
                       >
-                        <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                        <span className="hidden md:inline">{item.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
+                        <Icon className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                      <span className={clsx(active ? "inline" : "hidden lg:inline")}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-            {/* status + account */}
-            <div className="flex shrink-0 items-center gap-2">
-              <span
-                className={clsx(
-                  "flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-1.5 text-[11px] font-bold",
-                  isOnline
-                    ? "bg-accent-wash text-accent-deep"
-                    : "bg-warn-wash text-warn",
-                )}
-              >
-                <span
-                  className={clsx(
-                    "h-1.5 w-1.5 rounded-full",
-                    isOnline ? "animate-pulse bg-accent-deep" : "bg-warn",
-                  )}
-                />
-                <span className="hidden sm:inline">{isOnline ? "Live" : "Offline"}</span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="grid h-9 w-9 place-items-center rounded-full border border-line text-ink-muted transition hover:border-ink hover:bg-ink hover:text-white"
-                title="Log out"
-                aria-label="Log out"
-              >
-                <LogOut className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span
+              className={clsx(
+                "hidden items-center gap-1.5 rounded-[var(--r-pill)] px-3 py-1.5 text-[11px] font-bold sm:flex",
+                isOnline ? "bg-accent text-ink-panel" : "bg-warn-wash text-warn",
+              )}
+            >
+              <span className={clsx("h-1.5 w-1.5 rounded-full", isOnline ? "pulse-dot bg-ink-panel" : "bg-warn")} />
+              {isOnline ? "Live" : "Offline"}
+            </span>
+            <Link
+              href="/budget"
+              aria-label="Settings and budget"
+              className="grid h-10 w-10 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-white hover:text-ink"
+            >
+              <Settings className="h-4 w-4" aria-hidden />
+            </Link>
+            <button
+              onClick={handleLogout}
+              title="Log out"
+              aria-label="Log out"
+              className="grid h-10 w-10 place-items-center rounded-full bg-ink-panel text-on-dark transition hover:opacity-90"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-2 sm:px-6">
-        {children(deviceId)}
-      </main>
+      <main className="mx-auto max-w-[1560px] px-3 pb-12 pt-4 sm:px-5">{children(deviceId)}</main>
     </div>
   );
 }

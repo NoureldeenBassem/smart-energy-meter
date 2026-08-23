@@ -3,26 +3,29 @@ import { clsx } from "clsx";
 /**
  * The one card shell every surface uses.
  *
- * `tone="ink"` is the near-black variant used for the hero Overview card. It sets
- * `.on-ink`, which the focus-ring rule in globals.css keys off so keyboard focus
- * stays visible on a dark background.
+ * Two materials, and only two: frosted glass for everything, and a charcoal
+ * panel for the single anchor on each screen. A third material would stop the
+ * page reading as one atmosphere.
+ *
+ * `tone="ink"` also sets `.on-ink`, which the focus-ring rule in globals.css
+ * keys off so keyboard focus stays visible against the dark fill.
  */
 export function Card({
-  tone = "light",
+  tone = "glass",
   className,
   children,
 }: {
-  tone?: "light" | "ink";
+  tone?: "glass" | "strong" | "ink";
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <div
       className={clsx(
-        "rounded-[var(--radius-card)] transition-shadow",
-        tone === "ink"
-          ? "on-ink bg-surface-ink text-ink-onDark shadow-[var(--shadow-ink)]"
-          : "bg-surface text-ink shadow-[var(--shadow-card)]",
+        "rounded-[var(--r-card)]",
+        tone === "ink" && "on-ink panel-ink text-on-dark",
+        tone === "glass" && "glass text-ink",
+        tone === "strong" && "glass-strong text-ink",
         className,
       )}
     >
@@ -31,41 +34,31 @@ export function Card({
   );
 }
 
-/**
- * Card header: title on the left, optional action on the right.
- *
- * The reference puts a small circular arrow button in that slot. Here it is a
- * real link rather than an ornament — see StatTile.
- */
+/** Card header: title left, optional control right — the reference's arrow slot. */
 export function CardHead({
   title,
   hint,
   action,
-  tone = "light",
+  tone = "glass",
 }: {
   title: string;
   hint?: string;
   action?: React.ReactNode;
-  tone?: "light" | "ink";
+  tone?: "glass" | "ink";
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-5 pt-5">
+    <div className="flex items-start justify-between gap-3 px-6 pt-5">
       <div className="min-w-0">
         <h2
           className={clsx(
             "text-[15px] font-semibold tracking-tight",
-            tone === "ink" ? "text-ink-onDark" : "text-ink",
+            tone === "ink" ? "text-on-dark" : "text-ink",
           )}
         >
           {title}
         </h2>
         {hint && (
-          <p
-            className={clsx(
-              "mt-0.5 text-xs",
-              tone === "ink" ? "text-ink-onDark-muted" : "text-ink-muted",
-            )}
-          >
+          <p className={clsx("mt-0.5 text-xs", tone === "ink" ? "text-on-dark-2" : "text-ink-3")}>
             {hint}
           </p>
         )}

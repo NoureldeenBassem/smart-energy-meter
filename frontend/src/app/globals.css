@@ -1,151 +1,216 @@
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------------------
-   Design tokens.
-
-   One accent, deliberately. The palette is a muted blue-gray page with white
-   cards that lift off it, plus a single near-black surface used for the hero
-   card and the active nav pill. Everything else is neutral ink.
+/* ===========================================================================
+   WATTWISE — atmospheric glass theme
+   ---------------------------------------------------------------------------
+   Palette sampled from the reference dashboard: a soft periwinkle blue-gray
+   atmosphere carries the whole viewport, cards float on it as frosted glass,
+   one charcoal panel anchors the composition, and a single lime-yellow does
+   every piece of emphasis.
 
    THE ACCENT IS A FILL, NOT A TEXT COLOUR.
-   --accent is lime-yellow. On the light page it fails contrast for text at any
-   normal size, so it is used only as a fill or stroke (gauge arc, needle, the
-   one highlighted bar), or as text on --surface-ink where it is very high
-   contrast. Where an accent-coloured LABEL is needed on a light surface,
-   --accent-deep is the token to use.
---------------------------------------------------------------------------- */
+   #e3ec4a sits at 1.31:1 on white — invisible as type. It is used for fills,
+   arcs, needles and highlights, or as text on charcoal where it reads at
+   12:1. --accent-ink is the token for accent-coloured LABELS on light glass.
+=========================================================================== */
+
 :root {
-  --bg: #e9edf3;
-  --bg-deep: #dde3ec;
-  --surface: #ffffff;
-  --surface-muted: #f4f6fa;
-  --surface-ink: #151b23;
-  --surface-ink-soft: #1e2632;
+  /* atmosphere */
+  --sky-1: #d7e0ec;
+  --sky-2: #b9c8dc;
+  --sky-3: #9dafc8;
+  --sky-4: #8698b4;
 
-  --ink: #0f172a;
-  --ink-soft: #33415a;
-  --ink-muted: #556070;
-  --ink-onDark: #f2f5f9;
-  --ink-onDark-muted: #93a0b4;
+  /* frosted glass */
+  --glass: rgba(255, 255, 255, 0.58);
+  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass-soft: rgba(255, 255, 255, 0.34);
+  --glass-line: rgba(255, 255, 255, 0.66);
+  --glass-shadow: 0 2px 8px rgba(30, 41, 59, 0.06), 0 18px 40px -20px rgba(30, 41, 59, 0.34);
 
-  --accent: #dce531;
-  --accent-deep: #5f6600;
-  --accent-wash: #f7fac9;
+  /* charcoal anchor */
+  --ink-panel: #2b2f37;
+  --ink-panel-2: #363b44;
+  --ink-panel-line: rgba(255, 255, 255, 0.1);
+  --ink-shadow: 0 18px 44px -18px rgba(17, 21, 27, 0.62);
 
+  /* type */
+  --ink: #21262d;
+  --ink-2: #3d4650;
+  --ink-3: #5c6673;
+  --on-dark: #f1f4f8;
+  --on-dark-2: #9aa5b4;
+
+  /* accent */
+  --accent: #e3ec4a;
+  --accent-2: #cbd42f;
+  --accent-ink: #5c6400;
+  --accent-wash: rgba(227, 236, 74, 0.22);
+
+  /* status */
   --warn: #b32a2f;
-  --warn-wash: #fdecec;
-  --ok: #2f855a;
+  --warn-wash: rgba(179, 42, 47, 0.12);
+  --ok: #2b7a52;
 
-  --line: #dfe5ee;
-  --line-dark: #2b3542;
-
-  --radius-card: 20px;
-  --radius-pill: 999px;
-
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
-  --shadow-ink: 0 8px 32px -12px rgba(15, 23, 42, 0.45);
+  --r-card: 22px;
+  --r-pill: 999px;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-bg-deep: var(--bg-deep);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-surface-ink: var(--surface-ink);
-  --color-surface-ink-soft: var(--surface-ink-soft);
+  --color-sky-1: var(--sky-1);
+  --color-sky-2: var(--sky-2);
+  --color-sky-3: var(--sky-3);
+  --color-sky-4: var(--sky-4);
+
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-soft: var(--glass-soft);
+  --color-glass-line: var(--glass-line);
+
+  --color-ink-panel: var(--ink-panel);
+  --color-ink-panel-2: var(--ink-panel-2);
+  --color-ink-panel-line: var(--ink-panel-line);
 
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-ink-muted: var(--ink-muted);
-  --color-ink-onDark: var(--ink-onDark);
-  --color-ink-onDark-muted: var(--ink-onDark-muted);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-2: var(--on-dark-2);
 
   --color-accent: var(--accent);
-  --color-accent-deep: var(--accent-deep);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-wash: var(--accent-wash);
 
   --color-warn: var(--warn);
   --color-warn-wash: var(--warn-wash);
   --color-ok: var(--ok);
 
-  --color-line: var(--line);
-  --color-line-dark: var(--line-dark);
-
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* ---------------------------------------------------------------------------
+   The atmosphere. One gradient field on the body covers every route, so the
+   background is continuous rather than per-page — the reference reads as one
+   photograph behind floating glass, and a page-by-page background would break
+   that illusion on navigation.
+--------------------------------------------------------------------------- */
 body {
-  background: var(--bg);
+  min-height: 100vh;
   color: var(--ink);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(120% 90% at 8% -10%, rgba(255, 255, 255, 0.85) 0%, transparent 52%),
+    radial-gradient(90% 70% at 92% 4%, rgba(227, 236, 74, 0.14) 0%, transparent 46%),
+    radial-gradient(120% 120% at 50% 120%, var(--sky-4) 0%, transparent 58%),
+    linear-gradient(168deg, var(--sky-1) 0%, var(--sky-2) 44%, var(--sky-3) 100%);
+  background-attachment: fixed;
 }
 
-/* Numerals line up column-to-column and stop jittering as live values tick.
-   Applied via .num rather than globally so prose keeps proportional figures. */
+/* Slow atmospheric drift. Large, cheap, and behind everything. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 22% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 70%),
+    radial-gradient(30% 26% at 74% 62%, rgba(255, 255, 255, 0.34) 0%, transparent 70%);
+  animation: drift 34s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2%, 0) scale(1.06); }
+}
+
+/* ---------------------------------------------------------------------------
+   Frosted glass. Applied as a class rather than per-component utilities so the
+   blur radius, tint and border stay identical on every surface — glass that
+   varies card to card stops reading as one material.
+--------------------------------------------------------------------------- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+.glass-soft {
+  background: var(--glass-soft);
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+}
+.panel-ink {
+  background: linear-gradient(158deg, var(--ink-panel-2) 0%, var(--ink-panel) 62%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: var(--ink-shadow);
+}
+
+/* Tabular numerals: live values stop reflowing as digits tick. */
 .num {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
-/* Visible keyboard focus on both light and dark surfaces. The accent has enough
-   luminance to show against --surface-ink, and the offset keeps it clear of the
-   control's own border on light. */
+/* ---------------------------------------------------------------------------
+   Entrance choreography. Cards rise once, staggered, then never move again —
+   motion that repeats on every poll would make a live dashboard restless.
+--------------------------------------------------------------------------- */
+.rise {
+  animation: rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+.d1 { animation-delay: 0.05s; }
+.d2 { animation-delay: 0.11s; }
+.d3 { animation-delay: 0.17s; }
+.d4 { animation-delay: 0.23s; }
+.d5 { animation-delay: 0.29s; }
+.d6 { animation-delay: 0.35s; }
+
+/* Scene motion — only attached while the meter is actually reporting. */
+.flow      { animation: flow 1.5s linear infinite; }
+.spin-slow { animation: spin 9s linear infinite; transform-origin: center; }
+.spin-disc { animation: spin 2.6s linear infinite; transform-origin: center; }
+.pulse-dot { animation: pulseDot 1.9s ease-in-out infinite; }
+.bob       { animation: bob 4.2s ease-in-out infinite; }
+.sheen     { animation: sheen 7s ease-in-out infinite; }
+
+@keyframes flow     { to { stroke-dashoffset: -36; } }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+@keyframes bob      { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes sheen    { 0%,100% { opacity: 0.16; } 50% { opacity: 0.42; } }
+
+/* Focus stays visible on glass and on charcoal alike. */
 :where(a, button, input, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .on-ink :where(a, button, input, select, [tabindex]):focus-visible {
   outline-color: var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   HeroPanel animation.
-
-   Kept here rather than in styled-jsx so the reduced-motion block above applies
-   to it without a second declaration. All three stop when the meter is not
-   reporting, because the component only attaches these classes when live.
---------------------------------------------------------------------------- */
-.hp-flow {
-  animation: hp-flow 1.6s linear infinite;
-}
-.hp-spin {
-  transform-origin: 211px 309px;
-  animation: hp-spin 6s linear infinite;
-}
-.hp-blink {
-  animation: hp-blink 1.8s ease-in-out infinite;
-}
-
-@keyframes hp-flow {
-  to {
-    stroke-dashoffset: -34;
-  }
-}
-@keyframes hp-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes hp-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
   }
 }

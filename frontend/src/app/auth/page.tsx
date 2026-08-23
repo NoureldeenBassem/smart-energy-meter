@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Zap } from "lucide-react";
 import { clsx } from "clsx";
 
-import HeroPanel from "@/components/HeroPanel";
+import HeroScene from "@/components/HeroScene";
+import Logo from "@/components/Logo";
 import { registerUser, loginUser } from "@/lib/api";
 
 /**
@@ -54,38 +54,33 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg p-4 sm:p-6">
+    <div className="min-h-screen  p-4 sm:p-6">
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-[1200px] items-stretch gap-5 lg:grid-cols-2">
         {/* ---- left: identity ---- */}
         <div className="hidden lg:block">
-          <HeroPanel live watts={null} />
+          <HeroScene live watts={820} kwhCycle={412} savingPct={12} />
         </div>
 
         {/* ---- right: form ---- */}
         <div className="flex items-center justify-center">
           <div className="w-full max-w-md">
-            <div className="mb-7 flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-accent">
-                <Zap className="h-5 w-5 text-surface-ink" aria-hidden />
-              </span>
-              <span className="text-lg font-bold tracking-tight text-ink">
-                Smart Energy Meter
-              </span>
+            <div className="mb-7">
+              <Logo size={44} />
             </div>
 
             <h1 className="text-[26px] font-bold tracking-tight text-ink">
               {mode === "register" ? "Create your account" : "Welcome back"}
             </h1>
-            <p className="mt-1.5 text-sm text-ink-muted">
+            <p className="mt-1.5 text-sm text-ink-3">
               Track live consumption, forecast your month-end bill on Egypt&apos;s
               progressive tariff, and get a daily plan that keeps you inside your budget.
             </p>
 
-            <div className="mt-6 rounded-[var(--radius-card)] bg-surface p-6 shadow-[var(--shadow-card)]">
+            <div className="mt-6 rounded-[var(--r-card)] glass p-6 ">
               <div
                 role="group"
                 aria-label="Account mode"
-                className="mb-6 flex rounded-[var(--radius-pill)] bg-surface-muted p-1.5"
+                className="mb-6 flex rounded-[var(--r-pill)] bg-white/50 p-1.5"
               >
                 {(["register", "login"] as const).map((m) => (
                   <button
@@ -94,10 +89,10 @@ export default function AuthPage() {
                     onClick={() => setMode(m)}
                     aria-pressed={mode === m}
                     className={clsx(
-                      "flex-1 rounded-[var(--radius-pill)] py-2 text-sm font-semibold transition",
+                      "flex-1 rounded-[var(--r-pill)] py-2 text-sm font-semibold transition",
                       mode === m
-                        ? "bg-surface-ink text-ink-onDark shadow-sm"
-                        : "text-ink-muted hover:text-ink",
+                        ? "bg-ink-panel text-on-dark shadow-sm"
+                        : "text-ink-3 hover:text-ink",
                     )}
                   >
                     {m === "register" ? "Sign Up" : "Log In"}
@@ -109,7 +104,7 @@ export default function AuthPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted"
+                    className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3"
                   >
                     Email
                   </label>
@@ -120,13 +115,13 @@ export default function AuthPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-line bg-surface-muted px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-deep"
+                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-2"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted"
+                    className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3"
                   >
                     Password
                   </label>
@@ -140,9 +135,9 @@ export default function AuthPage() {
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-line bg-surface-muted px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-deep"
+                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-2"
                   />
-                  <p className="mt-1 text-[11px] text-ink-muted">
+                  <p className="mt-1 text-[11px] text-ink-3">
                     At least 8 characters.
                   </p>
                 </div>
@@ -159,7 +154,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-[var(--radius-pill)] bg-surface-ink py-3 text-sm font-bold text-ink-onDark transition hover:opacity-90 disabled:opacity-50"
+                  className="w-full rounded-[var(--r-pill)] bg-ink-panel py-3 text-sm font-bold text-on-dark transition hover:opacity-90 disabled:opacity-50"
                 >
                   {loading
                     ? "Working..."

@@ -27,7 +27,7 @@ export function SectionHeading({
             aria-hidden
             className={clsx(
               "num mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full",
-              "bg-surface-ink text-[12px] font-bold text-accent",
+              "panel-ink text-[12px] font-bold text-accent",
             )}
           >
             {step}
@@ -35,7 +35,7 @@ export function SectionHeading({
         )}
         <div>
           <h2 className="text-[17px] font-bold tracking-tight text-ink">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-[13px] text-ink-muted">{subtitle}</p>}
+          {subtitle && <p className="mt-0.5 text-[13px] text-ink-3">{subtitle}</p>}
         </div>
       </div>
       {right}

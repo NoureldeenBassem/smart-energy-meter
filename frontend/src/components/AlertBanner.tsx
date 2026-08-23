@@ -42,22 +42,20 @@ export default function AlertBanner({
   return (
     <div
       role="alert"
-      className={`flex items-start gap-3 rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-card)] ${
-        critical
-          ? "border border-warn/30 bg-warn-wash"
-          : "border border-accent-deep/25 bg-accent-wash"
+      className={`glass flex items-start gap-3 rounded-[var(--r-card)] p-4 ${
+        critical ? "!border-warn/35" : "!border-accent-2/50"
       }`}
     >
       {critical ? (
         <OctagonAlert className="mt-0.5 h-5 w-5 shrink-0 text-warn" aria-hidden />
       ) : (
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-accent-deep" aria-hidden />
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-accent-ink" aria-hidden />
       )}
 
       <div className="min-w-0">
         <p
           className={`text-sm font-bold ${
-            critical ? "text-warn" : "text-accent-deep"
+            critical ? "text-warn" : "text-accent-ink"
           }`}
         >
           {critical
@@ -74,10 +72,10 @@ export default function AlertBanner({
 
         {/* The backend's own wording, shown verbatim rather than paraphrased. */}
         {alert.message && (
-          <p className="mt-1 text-sm text-ink-soft">{alert.message}</p>
+          <p className="mt-1 text-sm text-ink-2">{alert.message}</p>
         )}
 
-        <p className="mt-1.5 text-xs text-ink-muted">
+        <p className="mt-1.5 text-xs text-ink-3">
           Your alert threshold is {alert.alert_threshold_pct}%.{" "}
           <Link
             href="/recommendations"

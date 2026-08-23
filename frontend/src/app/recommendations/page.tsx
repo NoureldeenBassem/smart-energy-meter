@@ -59,17 +59,17 @@ const STATUS_STYLES: Record<
 > = {
   essential: {
     label: "Locked",
-    chip: "bg-accent-wash text-accent-deep border-accent-deep/30",
+    chip: "bg-accent-wash text-accent-ink border-accent-2/30",
     icon: <Lock className="h-3 w-3" aria-hidden />,
   },
   optimal: {
     label: "Full runtime",
-    chip: "bg-surface-muted text-ink-soft border-line",
+    chip: "bg-white/50 text-ink-2 border-white/60",
     icon: <CheckCircle2 className="h-3 w-3" aria-hidden />,
   },
   constrained: {
     label: "Reduced",
-    chip: "bg-accent-wash text-accent-deep border-accent-deep/25",
+    chip: "bg-accent-wash text-accent-ink border-accent-2/25",
     icon: <TriangleAlert className="h-3 w-3" aria-hidden />,
   },
   shed: {
@@ -79,7 +79,7 @@ const STATUS_STYLES: Record<
   },
   away: {
     label: "Off (away)",
-    chip: "bg-surface-muted text-ink-muted border-line",
+    chip: "bg-white/50 text-ink-3 border-white/60",
     icon: <Moon className="h-3 w-3" aria-hidden />,
   },
 };
@@ -114,7 +114,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Loader2 className="h-7 w-7 animate-spin text-accent-deep" />
+        <Loader2 className="h-7 w-7 animate-spin text-accent-ink" />
       </div>
     );
   }
@@ -126,7 +126,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
         <div className="mt-3">
           <Link
             href="/budget"
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface-ink px-3.5 py-2 text-xs font-semibold text-ink-onDark transition hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-[var(--r-pill)] bg-ink-panel px-3.5 py-2 text-xs font-semibold text-on-dark transition hover:opacity-90"
           >
             Set a target bill <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -145,7 +145,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
 
       <div>
         <h1 className="text-[28px] font-bold tracking-tight text-ink">Today&apos;s plan</h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
+        <p className="mt-1 max-w-2xl text-sm text-ink-3">
           How long to run each appliance to stay inside the budget. Essential appliances
           are reserved first and are never reduced.
         </p>
@@ -155,15 +155,15 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
           the same way in both places. */}
       <Card className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">
             Household mode
           </span>
-          {switching && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink-muted" />}
+          {switching && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink-3" />}
         </div>
         <div
           role="group"
           aria-label="Household mode"
-          className="flex flex-wrap gap-2 rounded-[var(--radius-pill)] bg-surface-muted p-1.5"
+          className="flex flex-wrap gap-2 rounded-[var(--r-pill)] bg-white/50 p-1.5"
         >
           {MODES.map((m) => (
             <button
@@ -172,19 +172,19 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
               onClick={() => setMode(m)}
               aria-pressed={mode === m}
               className={clsx(
-                "flex-1 whitespace-nowrap rounded-[var(--radius-pill)] px-4 py-2 text-sm font-semibold transition",
+                "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
                 mode === m
-                  ? "bg-surface-ink text-ink-onDark shadow-sm"
-                  : "text-ink-muted hover:text-ink",
+                  ? "bg-ink-panel text-on-dark shadow-sm"
+                  : "text-ink-3 hover:text-ink",
               )}
             >
               {MODE_LABELS[m]}
             </button>
           ))}
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+        <p className="mt-3 text-xs leading-relaxed text-ink-3">
           Mode scales only the discretionary allowance. Even in{" "}
-          <span className="font-semibold text-ink-soft">Away</span>, which drops it to
+          <span className="font-semibold text-ink-2">Away</span>, which drops it to
           zero, essential appliances keep their full runtime.
         </p>
       </Card>
@@ -227,7 +227,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
                 <p className="text-sm font-bold text-warn">
                   This plan does not fit the target
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                <p className="mt-1 text-sm leading-relaxed text-ink-2">
                   {data.budget_note}
                 </p>
               </div>
@@ -268,9 +268,9 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
           {essentials.length > 0 && (
             <section>
               <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
-                <Lock className="h-4 w-4 text-accent-deep" aria-hidden />
+                <Lock className="h-4 w-4 text-accent-ink" aria-hidden />
                 Essential — protected
-                <span className="num rounded-[var(--radius-pill)] bg-accent-wash px-2 py-0.5 text-[11px] font-bold text-accent-deep">
+                <span className="num rounded-[var(--r-pill)] bg-accent-wash px-2 py-0.5 text-[11px] font-bold text-accent-ink">
                   {essentials.length}
                 </span>
               </h2>
@@ -285,16 +285,16 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
           {/* Discretionary */}
           <section>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
-              <Power className="h-4 w-4 text-ink-muted" aria-hidden />
+              <Power className="h-4 w-4 text-ink-3" aria-hidden />
               Adjustable
               {discretionary.length > 0 && (
-                <span className="num rounded-[var(--radius-pill)] bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-ink-muted">
+                <span className="num rounded-[var(--r-pill)] bg-white/50 px-2 py-0.5 text-[11px] font-bold text-ink-3">
                   {discretionary.length}
                 </span>
               )}
             </h2>
             {discretionary.length === 0 ? (
-              <Card className="p-5 text-sm text-ink-muted">
+              <Card className="p-5 text-sm text-ink-3">
                 Every registered appliance is marked essential, so there is nothing left
                 for the allocator to trade off.
               </Card>
@@ -319,7 +319,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
     <Card
       className={clsx(
         "p-4",
-        a.is_essential && "border-l-4 border-accent-deep",
+        a.is_essential && "border-l-4 border-accent-2",
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -329,7 +329,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
               className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent-wash"
               title="Essential — never restricted by the allocator"
             >
-              <Lock className="h-3.5 w-3.5 text-accent-deep" aria-hidden />
+              <Lock className="h-3.5 w-3.5 text-accent-ink" aria-hidden />
               <span className="sr-only">Essential, never restricted</span>
             </span>
           ) : (
@@ -338,7 +338,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
           <span className="truncate font-bold text-ink">{a.name}</span>
           <span
             className={clsx(
-              "inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+              "inline-flex shrink-0 items-center gap-1 rounded-[var(--r-pill)] border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
               style.chip,
             )}
           >
@@ -351,16 +351,16 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
           <span className="num text-xl font-bold text-ink">
             {a.recommended_runtime_hours}
           </span>
-          <span className="ml-1 text-xs font-semibold text-ink-muted">h/day</span>
-          <p className="num text-xs text-ink-muted">
+          <span className="ml-1 text-xs font-semibold text-ink-3">h/day</span>
+          <p className="num text-xs text-ink-3">
             {a.estimated_kwh.toFixed(2)} kWh
           </p>
         </div>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
         <span className="num">{a.rated_power_w} W</span>
-        <span aria-hidden className="text-ink-muted/50">
+        <span aria-hidden className="text-ink-3/50">
           |
         </span>
         {/* priority is shown as what it is — an ordering among adjustable appliances
@@ -370,7 +370,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
         </span>
       </div>
 
-      <p className="mt-1.5 text-sm text-ink-soft">{a.action_note}</p>
+      <p className="mt-1.5 text-sm text-ink-2">{a.action_note}</p>
     </Card>
   );
 }

@@ -50,7 +50,7 @@ export default function PhaseDial({
     };
   })();
 
-  const accent = stale || pf === null ? "#94a3b8" : "#b9c21f";
+  const accent = stale || pf === null ? "#94a3b8" : "#c9d223";
 
   return (
     <div className="flex flex-col items-center">
@@ -72,7 +72,7 @@ export default function PhaseDial({
             cy={cy}
             r={rad}
             fill={i === 0 ? "#f4f6fa" : "none"}
-            stroke="#dfe5ee"
+            stroke="rgba(255,255,255,0.8)"
             strokeWidth="1.5"
           />
         ))}
@@ -87,17 +87,17 @@ export default function PhaseDial({
               y1={cy + r * 0.44 * Math.sin(a)}
               x2={cx + r * Math.cos(a)}
               y2={cy + r * Math.sin(a)}
-              stroke="#cfd8e5"
+              stroke="rgba(134,152,180,0.35)"
               strokeWidth="1.5"
             />
           );
         })}
 
         {/* axis labels: what each end of the sweep means */}
-        <text x={cx + r + 10} y={cy + 4} textAnchor="middle" fill="#556070" style={{ fontSize: 10, fontWeight: 700 }}>
+        <text x={cx + r + 10} y={cy + 4} textAnchor="middle" fill="#5c6673" style={{ fontSize: 10, fontWeight: 700 }}>
           1.0
         </text>
-        <text x={cx} y={cy - r - 8} textAnchor="middle" fill="#556070" style={{ fontSize: 10, fontWeight: 700 }}>
+        <text x={cx} y={cy - r - 8} textAnchor="middle" fill="#5c6673" style={{ fontSize: 10, fontWeight: 700 }}>
           0.0
         </text>
 
@@ -131,14 +131,14 @@ export default function PhaseDial({
             <circle cx={needle.x} cy={needle.y} r="4" fill={accent} />
           </g>
         )}
-        <circle cx={cx} cy={cy} r="6" fill="#151b23" />
+        <circle cx={cx} cy={cy} r="6" fill="#2b2f37" />
 
         <text
           x={cx}
           y={cy + 34}
           textAnchor="middle"
           className="num"
-          fill="#0f172a"
+          fill="#21262d"
           style={{ fontSize: 22, fontWeight: 700 }}
         >
           {pf === null ? "--" : pf.toFixed(2)}
@@ -147,7 +147,7 @@ export default function PhaseDial({
           x={cx}
           y={cy + 48}
           textAnchor="middle"
-          fill="#556070"
+          fill="#5c6673"
           style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em" }}
         >
           POWER FACTOR
@@ -161,14 +161,14 @@ export default function PhaseDial({
           { label: "Phase", value: phiDeg, unit: "°", digits: 0 },
         ].map((f) => (
           <div key={f.label}>
-            <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-3">
               {f.label}
             </dt>
             <dd className="num mt-0.5 text-sm font-bold text-ink">
               {typeof f.value === "number" && Number.isFinite(f.value)
                 ? f.value.toFixed(f.digits)
                 : "--"}
-              <span className="ml-0.5 text-[11px] font-semibold text-ink-muted">{f.unit}</span>
+              <span className="ml-0.5 text-[11px] font-semibold text-ink-3">{f.unit}</span>
             </dd>
           </div>
         ))}

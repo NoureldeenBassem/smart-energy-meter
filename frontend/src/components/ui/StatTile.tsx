@@ -31,14 +31,14 @@ export function StatTile({
   return (
     <Card className="relative flex h-full flex-col justify-between p-5">
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-[0.09em] text-ink-muted">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
           {label}
         </span>
         {href && (
           <Link
             href={href}
             aria-label={hrefLabel ?? `Open ${label}`}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-ink-muted transition hover:border-ink hover:bg-ink hover:text-white"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
           >
             <ArrowUpRight className="h-4 w-4" aria-hidden />
           </Link>
@@ -50,16 +50,16 @@ export function StatTile({
           <span
             className={clsx(
               "num text-[30px] font-bold leading-none",
-              emphasis ? "text-accent-deep" : "text-ink",
+              emphasis ? "text-accent-ink" : "text-ink",
             )}
           >
             {value}
           </span>
           {unit && (
-            <span className="text-sm font-semibold text-ink-muted">{unit}</span>
+            <span className="text-sm font-semibold text-ink-3">{unit}</span>
           )}
         </div>
-        {sub && <p className="mt-1.5 text-xs text-ink-muted">{sub}</p>}
+        {sub && <p className="mt-1.5 text-xs text-ink-3">{sub}</p>}
       </div>
     </Card>
   );
