@@ -47,8 +47,10 @@ import {
  * non-essential appliance gets trimmed like any other, and showing the two the
  * same way is the exact conflation that made the guarantee fake in the first place.
  *
- * Essentials render on the dark surface and adjustable appliances on the light
- * one, so the two groups are separable before any label is read.
+ * Essentials are marked by an accent left edge, a padlock and their own group
+ * heading, so the two sets are separable before any label is read. The page
+ * carries no dark panels, so protection reads from the edge and the icon rather
+ * than from an inverted fill.
  */
 
 const STATUS_STYLES: Record<
@@ -57,7 +59,7 @@ const STATUS_STYLES: Record<
 > = {
   essential: {
     label: "Locked",
-    chip: "bg-accent/15 text-accent border-accent/30",
+    chip: "bg-accent-wash text-accent-deep border-accent-deep/30",
     icon: <Lock className="h-3 w-3" aria-hidden />,
   },
   optimal: {
@@ -312,31 +314,28 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
 
 function AllocationRow({ allocation: a }: { allocation: Allocation }) {
   const style = STATUS_STYLES[a.status] ?? STATUS_STYLES.optimal;
-  const onInk = a.is_essential;
 
   return (
-    <Card tone={onInk ? "ink" : "light"} className="p-4">
+    <Card
+      className={clsx(
+        "p-4",
+        a.is_essential && "border-l-4 border-accent-deep",
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {a.is_essential ? (
             <span
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent-wash"
               title="Essential — never restricted by the allocator"
             >
-              <Lock className="h-3.5 w-3.5 text-accent" aria-hidden />
+              <Lock className="h-3.5 w-3.5 text-accent-deep" aria-hidden />
               <span className="sr-only">Essential, never restricted</span>
             </span>
           ) : (
             <span className="h-7 w-7 shrink-0" aria-hidden />
           )}
-          <span
-            className={clsx(
-              "truncate font-bold",
-              onInk ? "text-ink-onDark" : "text-ink",
-            )}
-          >
-            {a.name}
-          </span>
+          <span className="truncate font-bold text-ink">{a.name}</span>
           <span
             className={clsx(
               "inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
@@ -349,41 +348,19 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
         </div>
 
         <div className="text-right">
-          <span
-            className={clsx(
-              "num text-xl font-bold",
-              onInk ? "text-ink-onDark" : "text-ink",
-            )}
-          >
+          <span className="num text-xl font-bold text-ink">
             {a.recommended_runtime_hours}
           </span>
-          <span
-            className={clsx(
-              "ml-1 text-xs font-semibold",
-              onInk ? "text-ink-onDark-muted" : "text-ink-muted",
-            )}
-          >
-            h/day
-          </span>
-          <p
-            className={clsx(
-              "num text-xs",
-              onInk ? "text-ink-onDark-muted" : "text-ink-muted",
-            )}
-          >
+          <span className="ml-1 text-xs font-semibold text-ink-muted">h/day</span>
+          <p className="num text-xs text-ink-muted">
             {a.estimated_kwh.toFixed(2)} kWh
           </p>
         </div>
       </div>
 
-      <div
-        className={clsx(
-          "mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs",
-          onInk ? "text-ink-onDark-muted" : "text-ink-muted",
-        )}
-      >
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
         <span className="num">{a.rated_power_w} W</span>
-        <span aria-hidden className={onInk ? "text-white/25" : "text-line"}>
+        <span aria-hidden className="text-ink-muted/50">
           |
         </span>
         {/* priority is shown as what it is — an ordering among adjustable appliances
@@ -393,14 +370,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
         </span>
       </div>
 
-      <p
-        className={clsx(
-          "mt-1.5 text-sm",
-          onInk ? "text-ink-onDark" : "text-ink-soft",
-        )}
-      >
-        {a.action_note}
-      </p>
+      <p className="mt-1.5 text-sm text-ink-soft">{a.action_note}</p>
     </Card>
   );
 }

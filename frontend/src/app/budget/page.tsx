@@ -243,36 +243,36 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
               Enter a target bill to see the kWh it allows.
             </div>
           ) : (
-            <div className="on-ink rounded-[var(--radius-card)] bg-surface-ink p-6 shadow-[var(--shadow-ink)]">
+            <div className="rounded-[var(--radius-card)] bg-surface p-6 shadow-[var(--shadow-card)]">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-onDark-muted">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
                     Allowed consumption
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="num text-[56px] font-bold leading-none text-accent">
+                    <span className="num text-[56px] font-bold leading-none text-accent-deep">
                       {allowance ? allowance.allowed_kwh.toFixed(1) : "--"}
                     </span>
-                    <span className="text-lg font-semibold text-ink-onDark-muted">kWh</span>
+                    <span className="text-lg font-semibold text-ink-muted">kWh</span>
                   </div>
-                  <p className="mt-2 text-sm text-ink-onDark-muted">
+                  <p className="mt-2 text-sm text-ink-muted">
                     for the whole billing cycle
                   </p>
                 </div>
                 {calculating && (
-                  <Loader2 className="h-4 w-4 animate-spin text-ink-onDark-muted" />
+                  <Loader2 className="h-4 w-4 animate-spin text-ink-muted" />
                 )}
               </div>
 
               {allowance && (
                 <>
                   {/* The round trip, shown rather than asserted. */}
-                  <p className="mt-5 flex items-start gap-2 rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-ink-onDark-muted">
-                    <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+                  <p className="mt-5 flex items-start gap-2 rounded-xl bg-surface-muted p-3 text-xs leading-relaxed text-ink-muted">
+                    <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-deep" aria-hidden />
                     <span>
                       Charging {allowance.allowed_kwh.toFixed(3)} kWh through the tariff
                       gives{" "}
-                      <span className="num font-bold text-accent">
+                      <span className="num font-bold text-accent-deep">
                         {allowance.bill_at_allowance.toFixed(2)} EGP
                       </span>
                       , against a {allowance.target_bill_egp.toFixed(2)} EGP target — the
@@ -310,36 +310,36 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                   </div>
 
                   {prediction && (
-                    <div className="mt-6 border-t border-line-dark pt-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-onDark-muted">
+                    <div className="mt-6 border-t border-line pt-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
                         Against this cycle
                       </p>
                       {usedPct !== null && (
                         <>
                           <div className="mt-2 mb-1.5 flex justify-between text-xs">
-                            <span className="num text-ink-onDark-muted">
+                            <span className="num text-ink-muted">
                               {prediction.kwh_so_far.toFixed(1)} kWh used of{" "}
                               {allowance.allowed_kwh.toFixed(1)} allowed
                             </span>
                             <span
                               className={`num font-bold ${
                                 usedPct >= 90
-                                  ? "text-[#f0776f]"
+                                  ? "text-warn"
                                   : usedPct >= threshold
-                                    ? "text-[#f2b53c]"
-                                    : "text-accent"
+                                    ? "text-[#a86a00]"
+                                    : "text-accent-deep"
                               }`}
                             >
                               {usedPct.toFixed(1)}%
                             </span>
                           </div>
-                          <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-2.5 overflow-hidden rounded-full bg-bg-deep">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${
                                 usedPct >= 90
-                                  ? "bg-[#f0776f]"
+                                  ? "bg-warn"
                                   : usedPct >= threshold
-                                    ? "bg-[#f2b53c]"
+                                    ? "bg-[#a86a00]"
                                     : "bg-accent"
                               }`}
                               style={{ width: `${Math.min(usedPct, 100)}%` }}
@@ -351,14 +351,14 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                       {overshoot !== null && (
                         <p className="mt-3 text-sm">
                           {overshoot > 0 ? (
-                            <span className="text-[#f0776f]">
+                            <span className="text-warn">
                               The current forecast of{" "}
                               {prediction.predicted_kwh.toFixed(1)} kWh exceeds this
                               target by <strong>{overshoot.toFixed(1)} kWh</strong>. To
                               hit it you would need to cut back.
                             </span>
                           ) : (
-                            <span className="text-accent">
+                            <span className="text-accent-deep">
                               The current forecast of{" "}
                               {prediction.predicted_kwh.toFixed(1)} kWh comes in{" "}
                               <strong>{Math.abs(overshoot).toFixed(1)} kWh</strong> under
@@ -440,12 +440,12 @@ function MiniStat({
   note?: string;
 }) {
   return (
-    <div className="rounded-xl bg-white/5 p-3.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-onDark-muted">
+    <div className="rounded-xl bg-surface-muted p-3.5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
         {label}
       </p>
-      <p className="num mt-1 text-xl font-bold text-ink-onDark">{value}</p>
-      {note && <p className="mt-0.5 text-xs text-ink-onDark-muted">{note}</p>}
+      <p className="num mt-1 text-xl font-bold text-ink">{value}</p>
+      {note && <p className="mt-0.5 text-xs text-ink-muted">{note}</p>}
     </div>
   );
 }

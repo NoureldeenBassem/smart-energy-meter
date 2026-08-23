@@ -193,17 +193,17 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
           </Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-12">
-            {/* ---- left column: hero illustration + dark gauge card ---- */}
+            {/* ---- left column: hero illustration + gauge card ---- */}
             <div className="flex flex-col gap-4 lg:col-span-4">
               <HeroPanel live={meterLive} watts={telemetry?.active_power ?? null} />
 
-              <Card tone="ink" className="p-5">
+              <Card className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-[15px] font-semibold text-ink-onDark">Overview</h2>
-                    <p className="mt-0.5 text-xs text-ink-onDark-muted">Live power draw</p>
+                    <h2 className="text-[15px] font-semibold text-ink">Overview</h2>
+                    <p className="mt-0.5 text-xs text-ink-muted">Live power draw</p>
                   </div>
-                  <span className="rounded-[var(--radius-pill)] bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-ink-onDark-muted">
+                  <span className="rounded-[var(--radius-pill)] bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-ink-muted">
                     Today
                   </span>
                 </div>
@@ -221,7 +221,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                   />
                 </div>
 
-                <dl className="mt-4 space-y-3 border-t border-line-dark pt-4">
+                <dl className="mt-4 space-y-3 border-t border-line pt-4">
                   <InkRow
                     label="Used today"
                     value={telemetry ? telemetry.today_energy_kwh.toFixed(2) : "--"}
@@ -244,7 +244,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                 </dl>
 
                 {telemetry && (
-                  <p className="mt-4 text-[11px] leading-relaxed text-ink-onDark-muted">
+                  <p className="mt-4 text-[11px] leading-relaxed text-ink-muted">
                     Timestamped{" "}
                     <span className="num">
                       {new Date(telemetry.last_updated).toLocaleTimeString()}
@@ -388,24 +388,24 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
           </Card>
         ) : prediction ? (
           <div className="grid gap-4 lg:grid-cols-12">
-            <Card tone="ink" className="p-6 lg:col-span-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-onDark-muted">
+            <Card className="p-6 lg:col-span-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
                 Predicted bill at cycle end
               </p>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="num text-[56px] font-bold leading-none text-accent">
+                <span className="num text-[56px] font-bold leading-none text-accent-deep">
                   {prediction.predicted_bill_egp.toFixed(0)}
                 </span>
-                <span className="text-lg font-semibold text-ink-onDark-muted">EGP</span>
+                <span className="text-lg font-semibold text-ink-muted">EGP</span>
               </div>
-              <p className="mt-2 text-sm text-ink-onDark-muted">
+              <p className="mt-2 text-sm text-ink-muted">
                 {prediction.predicted_kwh.toFixed(1)} kWh forecast ·{" "}
                 {prediction.days_remaining_in_cycle} days remaining
               </p>
 
               {/* Confidence band. The marker's left offset is the only derived value. */}
               <div className="mt-7">
-                <div className="mb-1.5 flex justify-between text-[11px] text-ink-onDark-muted">
+                <div className="mb-1.5 flex justify-between text-[11px] text-ink-muted">
                   <span className="num">
                     {prediction.confidence_bill_low_egp.toFixed(0)} EGP
                   </span>
@@ -414,18 +414,18 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                     {prediction.confidence_bill_high_egp.toFixed(0)} EGP
                   </span>
                 </div>
-                <div className="relative h-3 rounded-full bg-white/10">
-                  <div className="absolute inset-0 rounded-full bg-accent/25" />
+                <div className="relative h-3 rounded-full bg-bg-deep">
+                  <div className="absolute inset-0 rounded-full bg-accent/45" />
                   <div
-                    className="absolute top-1/2 h-5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent"
+                    className="absolute top-1/2 h-5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-deep"
                     style={{ left: `${markerPct}%` }}
                     title={`Point estimate ${prediction.predicted_bill_egp.toFixed(0)} EGP`}
                   />
                 </div>
-                <p className="mt-2.5 text-[11px] text-ink-onDark-muted">
+                <p className="mt-2.5 text-[11px] text-ink-muted">
                   {prediction.confidence_label}
                 </p>
-                <p className="mt-0.5 text-[11px] text-ink-onDark-muted/80">
+                <p className="mt-0.5 text-[11px] text-ink-muted">
                   Basis: {prediction.confidence_basis}.{" "}
                   <span className="num">
                     {prediction.confidence_low.toFixed(1)}–{prediction.confidence_high.toFixed(1)}
@@ -641,7 +641,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                       className={clsx(
                         "rounded-xl p-3.5",
                         a.is_essential
-                          ? "bg-surface-ink text-ink-onDark"
+                          ? "border-l-4 border-accent-deep bg-accent-wash text-ink"
                           : "bg-surface-muted text-ink",
                       )}
                     >
@@ -649,7 +649,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                         <span className="flex items-center gap-1.5 text-sm font-bold">
                           {a.is_essential && (
                             <Lock
-                              className="h-3.5 w-3.5 shrink-0 text-accent"
+                              className="h-3.5 w-3.5 shrink-0 text-accent-deep"
                               aria-label="Essential — never restricted"
                             />
                           )}
@@ -662,7 +662,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                       <p
                         className={clsx(
                           "mt-1 text-xs",
-                          a.is_essential ? "text-ink-onDark-muted" : "text-ink-muted",
+                          "text-ink-muted",
                         )}
                       >
                         {a.action_note}
@@ -681,7 +681,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
   );
 }
 
-/** A label/value row inside the dark Overview card. */
+/** A label/value row inside the Overview card. */
 function InkRow({
   label,
   value,
@@ -693,10 +693,10 @@ function InkRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="text-xs text-ink-onDark-muted">{label}</dt>
-      <dd className="num text-sm font-bold text-ink-onDark">
+      <dt className="text-xs text-ink-muted">{label}</dt>
+      <dd className="num text-sm font-bold text-ink">
         {value}
-        <span className="ml-1 text-[11px] font-semibold text-ink-onDark-muted">{unit}</span>
+        <span className="ml-1 text-[11px] font-semibold text-ink-muted">{unit}</span>
       </dd>
     </div>
   );
