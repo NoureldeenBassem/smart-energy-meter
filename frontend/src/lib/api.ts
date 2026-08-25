@@ -8,16 +8,22 @@ import axios from "axios";
  * call its own origin and get nothing. That also blocks installing it as a PWA,
  * since that needs a real hostname over HTTPS.
  *
- * Set NEXT_PUBLIC_API_URL to the backend's origin to point it elsewhere:
+ * DEFAULT IS SAME-ORIGIN. With no configuration the client requests
+ * "/api/v1/..." from whatever host it was served by, and next.config.ts rewrites
+ * that to the backend. One origin in the browser means CORS never applies, and
+ * the app works unchanged on localhost, on a LAN address, or through a single
+ * HTTPS tunnel — none of which it has to be told about.
  *
- *   NEXT_PUBLIC_API_URL=http://192.168.1.20:8000   (phone on the same network)
- *   NEXT_PUBLIC_API_URL=https://api.example.com    (deployed)
+ * NEXT_PUBLIC_API_URL overrides it when the API genuinely lives elsewhere, e.g.
+ * a separately deployed backend:
  *
- * It is read at BUILD time, not runtime — NEXT_PUBLIC_* is inlined by Next — so
- * changing it needs a rebuild. The localhost default keeps `npm run dev`
- * working with no configuration, which is how it is used most of the time.
+ *   NEXT_PUBLIC_API_URL=https://api.example.com
+ *
+ * That one IS inlined at build time, so setting it needs a rebuild. To point at
+ * a different backend without rebuilding, set BACKEND_ORIGIN and restart the
+ * Next server instead — the proxy target is read there.
  */
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "";
 const API_BASE_URL = `${API_ORIGIN.replace(/\/$/, "")}/api/v1`;
 
 export const apiClient = axios.create({
@@ -291,7 +297,7 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
     const detail = err.response?.data?.detail;
     if (typeof detail === "string" && detail.length > 0) return detail;
     if (err.code === "ERR_NETWORK") {
-      return `Cannot reach the API at ${API_ORIGIN}. Is the backend running?`;
+      return `Cannot reach the API at ${API_ORIGIN || "this site's own origin"}. Is the backend running?`;
     }
   }
   return fallback;
