@@ -42,12 +42,21 @@ type Callout = {
   side: "left" | "right";
 };
 
+// EVERY LABEL LIVES IN THE LEFT COLUMN, DELIBERATELY.
+// Three of these used to sit on the right of the hardware, at 29-40% of the
+// canvas. The card grid starts at roughly 42% of the viewport and `slice`
+// crops the sides, so at real window widths those boxes slid under the cards
+// and their text was clipped mid-word. Anything right of ~25% is unsafe here.
+//
+// Stacked top to bottom with leaders running right into the hardware, which is
+// also how an installation diagram would draw them. Four labels, not five: the
+// old "Non-invasive SCT-013 / around the live conductor" said the same thing as
+// "CT clamp / clamped, not cut", and a crowded column is its own kind of noise.
 const CALLOUTS: Callout[] = [
-  { ax: 352, ay: 322, lx: 66, ly: 250, side: "right", title: "CT clamp", sub: "clamped, not cut" },
-  { ax: 372, ay: 268, lx: 470, ly: 176, side: "left", title: "Non-invasive SCT-013", sub: "around the live conductor" },
-  { ax: 548, ay: 470, lx: 640, ly: 404, side: "left", title: "ZMPT101B", sub: "isolated voltage sensing" },
-  { ax: 402, ay: 596, lx: 66, ly: 566, side: "right", title: "Burden + bias network", sub: "centres the AC swing" },
-  { ax: 556, ay: 620, lx: 646, ly: 638, side: "left", title: "ESP32 ADC", sub: "samples V and I" },
+  { ax: 352, ay: 322, lx: 40, ly: 250, side: "right", title: "CT clamp", sub: "clamped, not cut" },
+  { ax: 548, ay: 470, lx: 40, ly: 384, side: "right", title: "ZMPT101B", sub: "isolated voltage sensing" },
+  { ax: 402, ay: 596, lx: 40, ly: 506, side: "right", title: "Burden + bias network", sub: "centres the AC swing" },
+  { ax: 556, ay: 620, lx: 40, ly: 628, side: "right", title: "ESP32 ADC", sub: "samples V and I" },
 ];
 
 export default function SceneBackground({
