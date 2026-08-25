@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Metermind — offline</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #eef3f9;
+      background:
+        radial-gradient(46% 40% at 18% 22%, rgba(88,132,178,0.5) 0%, rgba(88,132,178,0) 62%),
+        radial-gradient(38% 44% at 74% 8%, rgba(227,236,74,0.13) 0%, rgba(227,236,74,0) 60%),
+        linear-gradient(150deg, #16202c 0%, #0e1620 52%, #090d13 100%);
+    }
+    .card { max-width: 380px; text-align: center; }
+    h1 { margin: 26px 0 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+    p { margin: 12px 0 0; font-size: 14px; line-height: 1.65; color: rgba(206,220,238,0.7); }
+    .why {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      text-align: left;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: rgba(206,220,238,0.62);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+    }
+    button {
+      margin-top: 22px;
+      width: 100%;
+      padding: 13px 20px;
+      border: 0;
+      border-radius: 999px;
+      background: #e3ec4a;
+      color: #14181f;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <svg width="76" height="76" viewBox="0 0 48 48" role="img" aria-label="Metermind">
+      <circle cx="24" cy="24" r="24" fill="#e3ec4a"></circle>
+      <path d="M12.5 31.5 A 14 14 0 1 1 35.5 31.5" fill="none" stroke="#1c2028" stroke-width="3" stroke-linecap="round"></path>
+      <path d="M26.6 11.5 L17.6 25.4 h5.3 l-1.6 11.1 9.1 -14.2 h-5.4 z" fill="#1c2028"></path>
+    </svg>
+
+    <h1>You're offline</h1>
+    <p>Metermind opened, but it can't reach your meter right now.</p>
+
+    <!-- Being specific about WHY there is nothing to show: this app deliberately
+         never caches readings, so "offline" means no data rather than old data
+         presented as current. -->
+    <div class="why">
+      Readings are never stored on the device. That's deliberate — a cached
+      number would look live when it isn't, and a meter you can't reach is
+      something you should know about, not something to paper over.
+    </div>
+
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

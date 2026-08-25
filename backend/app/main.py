@@ -26,6 +26,7 @@ naming the command to run beats a half-built database that looks fine.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -97,12 +98,28 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — restricted to the local Next.js dev server, not a wildcard.
-# Wildcard origins ("*") don't work with allow_credentials=True anyway,
-# and being explicit here is the correct default even for a dev project.
+# CORS.
+#
+# Still an explicit allow-list, never a wildcard: "*" does not work with
+# allow_credentials=True anyway, and naming the origins is the right default
+# even for a dev project.
+#
+# The list is extendable through CORS_ORIGINS (comma-separated) because the
+# frontend is no longer always on localhost — opening it on a phone over the
+# LAN, or installing it as a PWA from a tunnelled HTTPS URL, means requests
+# arrive from an origin this file cannot know in advance. Without that the
+# browser blocks every call and the UI shows "cannot reach the API", which
+# looks like the backend is down when it is running perfectly.
+#
+#   CORS_ORIGINS=http://192.168.1.20:3000,https://meter.trycloudflare.com
+_DEFAULT_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+_EXTRA_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_DEFAULT_ORIGINS + _EXTRA_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

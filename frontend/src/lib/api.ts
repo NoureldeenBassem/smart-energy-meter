@@ -1,6 +1,24 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+/**
+ * Where the API lives.
+ *
+ * Hardcoding localhost meant the app could only ever be opened on the machine
+ * running the backend — a phone on the same Wi-Fi, or any deployed build, would
+ * call its own origin and get nothing. That also blocks installing it as a PWA,
+ * since that needs a real hostname over HTTPS.
+ *
+ * Set NEXT_PUBLIC_API_URL to the backend's origin to point it elsewhere:
+ *
+ *   NEXT_PUBLIC_API_URL=http://192.168.1.20:8000   (phone on the same network)
+ *   NEXT_PUBLIC_API_URL=https://api.example.com    (deployed)
+ *
+ * It is read at BUILD time, not runtime — NEXT_PUBLIC_* is inlined by Next — so
+ * changing it needs a rebuild. The localhost default keeps `npm run dev`
+ * working with no configuration, which is how it is used most of the time.
+ */
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_BASE_URL = `${API_ORIGIN.replace(/\/$/, "")}/api/v1`;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -273,7 +291,7 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
     const detail = err.response?.data?.detail;
     if (typeof detail === "string" && detail.length > 0) return detail;
     if (err.code === "ERR_NETWORK") {
-      return "Cannot reach the API on localhost:8000. Is the backend running?";
+      return `Cannot reach the API at ${API_ORIGIN}. Is the backend running?`;
     }
   }
   return fallback;

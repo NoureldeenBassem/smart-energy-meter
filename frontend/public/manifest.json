@@ -1,0 +1,47 @@
+{
+  "name": "Metermind — Smart Energy Meter",
+  "short_name": "Metermind",
+  "description": "Live household power, month-end bill prediction on Egypt's progressive tariff, and a daily appliance plan that keeps you inside your budget.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1016",
+  "theme_color": "#0b1016",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today's plan",
+      "short_name": "Plan",
+      "url": "/recommendations",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Budget planner",
+      "short_name": "Budget",
+      "url": "/budget",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
