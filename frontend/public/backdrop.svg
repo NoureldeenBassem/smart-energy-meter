@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000"
+     preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Base field: palest at top centre, deepening toward the lower edges,
+         matching the reference's light source. -->
+    <linearGradient id="base" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%"   stop-color="#d3ecfb"/>
+      <stop offset="45%"  stop-color="#aedcf8"/>
+      <stop offset="100%" stop-color="#8ecdf5"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.06" r="0.85">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="55%"  stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+  </defs>
+
+  <rect width="2000" height="1000" fill="url(#base)"/>
+    <polygon points="1657.1,153.0 1535.0,298.5 1347.9,265.5 1282.9,87.0 1405.0,-58.5 1592.1,-25.5" fill="#ffffff" stroke="#ffffff" stroke-width="80" stroke-linejoin="round" opacity="0.3"/>
+  <polygon points="1869.5,109.7 1734.4,204.4 1584.8,134.6 1570.5,-29.7 1705.6,-124.4 1855.2,-54.6" fill="#ffffff" stroke="#ffffff" stroke-width="69" stroke-linejoin="round" opacity="0.26"/>
+  <polygon points="1795.0,355.0 1742.5,445.9 1637.5,445.9 1585.0,355.0 1637.5,264.1 1742.5,264.1" fill="#ffffff" stroke="#ffffff" stroke-width="44" stroke-linejoin="round" opacity="0.22" filter="url(#soft)"/>
+  <polygon points="1997.6,678.1 1948.1,727.6 1880.5,709.5 1862.4,641.9 1911.9,592.4 1979.5,610.5" fill="#ffffff" stroke="#ffffff" stroke-width="29" stroke-linejoin="round" opacity="0.3"/>
+  <polygon points="2049.4,483.1 1963.4,605.9 1814.0,592.9 1750.6,456.9 1836.6,334.1 1986.0,347.1" fill="#ffffff" stroke="#ffffff" stroke-width="63" stroke-linejoin="round" opacity="0.16" filter="url(#soft)"/>
+  <polygon points="182.2,444.5 82.6,528.0 -39.6,483.6 -62.2,355.5 37.4,272.0 159.6,316.4" fill="#ffffff" stroke="#ffffff" stroke-width="55" stroke-linejoin="round" opacity="0.34" filter="url(#soft)"/>
+  <polygon points="245.0,430.0 197.5,512.3 102.5,512.3 55.0,430.0 102.5,347.7 197.5,347.7" fill="#ffffff" stroke="#ffffff" stroke-width="40" stroke-linejoin="round" opacity="0.26" filter="url(#soft)"/>
+  <polygon points="479.9,838.9 322.6,1013.5 92.8,964.6 20.1,741.1 177.4,566.5 407.2,615.4" fill="#ffffff" stroke="#ffffff" stroke-width="99" stroke-linejoin="round" opacity="0.3"/>
+  <polygon points="550.0,700.0 490.0,803.9 370.0,803.9 310.0,700.0 370.0,596.1 490.0,596.1" fill="#ffffff" stroke="#ffffff" stroke-width="50" stroke-linejoin="round" opacity="0.28"/>
+  <polygon points="873.3,904.4 765.6,1042.3 592.3,1017.9 526.7,855.6 634.4,717.7 807.7,742.1" fill="#ffffff" stroke="#ffffff" stroke-width="74" stroke-linejoin="round" opacity="0.26"/>
+  <polygon points="927.0,902.0 906.0,938.4 864.0,938.4 843.0,902.0 864.0,865.6 906.0,865.6" fill="#ffffff" stroke="#ffffff" stroke-width="18" stroke-linejoin="round" opacity="0.3"/>
+  <polygon points="1500.0,800.0 1405.0,964.5 1215.0,964.5 1120.0,800.0 1215.0,635.5 1405.0,635.5" fill="#ffffff" stroke="#ffffff" stroke-width="80" stroke-linejoin="round" opacity="0.22" filter="url(#soft)"/>
+  <polygon points="1284.6,994.0 1202.9,1067.6 1098.3,1033.6 1075.4,926.0 1157.1,852.4 1261.7,886.4" fill="#ffffff" stroke="#ffffff" stroke-width="46" stroke-linejoin="round" opacity="0.2"/>
+  <rect x="-150" y="-700" width="40" height="2600" fill="url(#streak)" opacity="0.34" transform="rotate(38 -150 500)"/>
+  <rect x="240" y="-700" width="16" height="2600" fill="url(#streak)" opacity="0.3" transform="rotate(38 240 500)"/>
+  <rect x="900" y="-700" width="10" height="2600" fill="url(#streak)" opacity="0.26" transform="rotate(38 900 500)"/>
+  <rect x="1180" y="-700" width="26" height="2600" fill="url(#streak)" opacity="0.24" transform="rotate(38 1180 500)"/>
+  <rect x="1460" y="-700" width="12" height="2600" fill="url(#streak)" opacity="0.3" transform="rotate(38 1460 500)"/>
+  <rect x="1700" y="-700" width="34" height="2600" fill="url(#streak)" opacity="0.22" transform="rotate(38 1700 500)"/>
+  <rect width="2000" height="1000" fill="url(#glow)"/>
+</svg>

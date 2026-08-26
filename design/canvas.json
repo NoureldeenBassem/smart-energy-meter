@@ -10,7 +10,7 @@
       "x": 0,
       "y": -190,
       "w": 460,
-      "text": "Metermind — smart energy meter dashboard\n\nTokens lifted from the live app: accent #e3ec4a (fills only, never text on light), glass rgba(255,255,255,0.66), charcoal panels #2b2f37, 22px radii, Geist + Geist Mono.\n\nSample values are representative: 888 EGP predicted against a 900 EGP target, 426.6 kWh this cycle, day 24 of 31."
+      "text": "Wattwise — smart energy meter dashboard\n\nTokens lifted from the live app: accent #e3ec4a (fills only, never text on light), glass rgba(255,255,255,0.66), charcoal panels #2b2f37, 22px radii, Geist + Geist Mono.\n\nSample values are representative: 888 EGP predicted against a 900 EGP target, 426.6 kWh this cycle, day 24 of 31."
     },
     {
       "id": "hardware-note",

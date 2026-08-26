@@ -32,7 +32,7 @@ import {
 } from "@/lib/api";
 
 /**
- * Today's appliance plan.
+ * Today's appliance plan — redesigned per Phase 4 KPI hierarchy.
  *
  * ESSENTIALS ARE RENDERED LOCKED
  * ------------------------------
@@ -113,15 +113,15 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <Loader2 className="h-7 w-7 animate-spin text-accent-ink" />
+      <div className="flex items-center justify-center py-20">
+        <span className="pulse-dot h-9 w-9 rounded-full bg-accent" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border border-warn/25 bg-warn-wash p-5 text-sm text-warn">
+      <Card className="border border-warn/25 bg-warn-wash p-5 text-sm text-warn rise d1">
         {error}
         <div className="mt-3">
           <Link
@@ -140,20 +140,11 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
   const planTotal = data?.total_allocated_kwh ?? 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <AlertBanner alert={data?.alert} daysRemaining={data?.days_remaining_in_month} />
 
-      <div>
-        <h1 className="text-[28px] font-bold tracking-tight text-ink">Today&apos;s plan</h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-3">
-          How long to run each appliance to stay inside the budget. Essential appliances
-          are reserved first and are never reduced.
-        </p>
-      </div>
-
-      {/* Mode switcher — same pill vocabulary as the top nav, so "selected" reads
-          the same way in both places. */}
-      <Card className="p-5">
+      {/* ============ HERO: Mode Switcher ============ */}
+      <Card className="rise d1 p-5">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">
             Household mode
@@ -189,17 +180,19 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
         </p>
       </Card>
 
+      {/* ============ STAT TILES GRID ============ */}
       {data && (
         <>
-          {/* Budget split */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
+              className="rise d2"
               label="Budget for today"
               value={data.budget_daily_kwh.toFixed(2)}
               unit="kWh"
               sub={`${data.daily_kwh_allowance.toFixed(1)} kWh left over ${data.days_remaining_in_month}d`}
             />
             <StatTile
+              className="rise d3"
               label="Reserved for essentials"
               value={data.essential_kwh.toFixed(2)}
               unit="kWh"
@@ -207,12 +200,14 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
               emphasis
             />
             <StatTile
+              className="rise d4"
               label="Discretionary pool"
               value={data.discretionary_kwh_allowance.toFixed(2)}
               unit="kWh"
               sub={`${MODE_LABELS[data.active_mode]} mode`}
             />
             <StatTile
+              className="rise d5"
               label="Total planned"
               value={data.total_allocated_kwh.toFixed(2)}
               unit="kWh"
@@ -220,8 +215,9 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
             />
           </div>
 
+          {/* Budget warning */}
           {!data.within_budget && data.budget_note && (
-            <Card className="flex items-start gap-3 border border-warn/25 bg-warn-wash p-4">
+            <Card className="rise d6 flex items-start gap-3 border border-warn/25 bg-warn-wash p-4">
               <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-warn" aria-hidden />
               <div>
                 <p className="text-sm font-bold text-warn">
@@ -234,10 +230,9 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
             </Card>
           )}
 
-          {/* Share of today's plan — the reference's threshold rows, applied to
-              appliances. Proportion of the fetched total; no energy is recomputed. */}
+          {/* ============ SHARE OF PLAN (ThresholdBars) ============ */}
           {data.allocations.length > 0 && planTotal > 0 && (
-            <Card className="p-5">
+            <Card className="rise d7 p-5">
               <SectionHeading
                 title="Share of today's plan"
                 subtitle="How the day's planned energy divides across the household"
@@ -264,9 +259,9 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
             </Card>
           )}
 
-          {/* Essentials */}
+          {/* ============ ESSENTIALS (Locked) ============ */}
           {essentials.length > 0 && (
-            <section>
+            <section className="rise d8">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
                 <Lock className="h-4 w-4 text-accent-ink" aria-hidden />
                 Essential — protected
@@ -275,15 +270,15 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
                 </span>
               </h2>
               <div className="space-y-2.5">
-                {essentials.map((a) => (
-                  <AllocationRow key={a.appliance_id} allocation={a} />
+                {essentials.map((a, i) => (
+                  <AllocationRow key={a.appliance_id} allocation={a} delay={`d${9 + i}`} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Discretionary */}
-          <section>
+          {/* ============ DISCRETIONARY (Adjustable) ============ */}
+          <section className={`rise d${essentials.length > 0 ? 10 : 9}`}>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
               <Power className="h-4 w-4 text-ink-3" aria-hidden />
               Adjustable
@@ -300,8 +295,12 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
               </Card>
             ) : (
               <div className="space-y-2.5">
-                {discretionary.map((a) => (
-                  <AllocationRow key={a.appliance_id} allocation={a} />
+                {discretionary.map((a, i) => (
+                  <AllocationRow
+                    key={a.appliance_id}
+                    allocation={a}
+                    delay={`d${essentials.length > 0 ? 11 + i : 10 + i}`}
+                  />
                 ))}
               </div>
             )}
@@ -312,7 +311,13 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
   );
 }
 
-function AllocationRow({ allocation: a }: { allocation: Allocation }) {
+function AllocationRow({
+  allocation: a,
+  delay,
+}: {
+  allocation: Allocation;
+  delay?: string;
+}) {
   const style = STATUS_STYLES[a.status] ?? STATUS_STYLES.optimal;
 
   return (
@@ -320,6 +325,7 @@ function AllocationRow({ allocation: a }: { allocation: Allocation }) {
       className={clsx(
         "p-4",
         a.is_essential && "border-l-4 border-accent-2",
+        delay,
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">

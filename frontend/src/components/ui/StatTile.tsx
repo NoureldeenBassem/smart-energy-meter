@@ -16,20 +16,27 @@ export function StatTile({
   value,
   unit,
   sub,
+  // `note` is an alias for `sub`. Pages use both names for the same slot; rather
+  // than rewrite every call site, accept both and render whichever is supplied.
+  note,
   href,
   hrefLabel,
   emphasis = false,
+  className,
 }: {
   label: string;
   value: string;
   unit?: string;
   sub?: string;
+  note?: string;
   href?: string;
   hrefLabel?: string;
   emphasis?: boolean;
+  className?: string;
 }) {
+  const caption = sub ?? note;
   return (
-    <Card className="relative flex h-full flex-col justify-between p-5">
+    <Card className={clsx("relative flex h-full flex-col justify-between p-5", className)}>
       <div className="flex items-start justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
           {label}
@@ -59,7 +66,7 @@ export function StatTile({
             <span className="text-sm font-semibold text-ink-3">{unit}</span>
           )}
         </div>
-        {sub && <p className="mt-1.5 text-xs text-ink-3">{sub}</p>}
+        {caption && <p className="mt-1.5 text-xs text-ink-3">{caption}</p>}
       </div>
     </Card>
   );

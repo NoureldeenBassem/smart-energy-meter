@@ -1,4 +1,4 @@
-/* Metermind service worker.
+/* Wattwise service worker.
  *
  * Scope is narrow on purpose: make the app shell open without a network, and
  * nothing else.
@@ -18,7 +18,7 @@
  * Runtime caching needs neither.
  */
 
-const VERSION = "metermind-v1";
+const VERSION = "wattwise-v2";
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 

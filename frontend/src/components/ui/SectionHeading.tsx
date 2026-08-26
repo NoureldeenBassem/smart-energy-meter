@@ -10,11 +10,15 @@ import { clsx } from "clsx";
  */
 export function SectionHeading({
   step,
+  icon,
   title,
   subtitle,
   right,
 }: {
   step?: number;
+  /** Leading glyph, used where a section is identified by icon rather than by
+   *  its position in an argument. Decorative, so it is hidden from the AT tree. */
+  icon?: React.ReactNode;
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
@@ -22,6 +26,14 @@ export function SectionHeading({
   return (
     <div className="mb-3 flex items-end justify-between gap-4">
       <div className="flex items-start gap-3">
+        {icon && (
+          <span
+            aria-hidden
+            className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full panel-ink text-accent"
+          >
+            {icon}
+          </span>
+        )}
         {typeof step === "number" && (
           <span
             aria-hidden

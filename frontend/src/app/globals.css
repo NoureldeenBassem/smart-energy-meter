@@ -16,9 +16,9 @@
 
 :root {
   /* atmosphere */
-  --sky-1: #d7e0ec;
-  --sky-2: #b9c8dc;
-  --sky-3: #9dafc8;
+  --sky-1: #d3ecfb;
+  --sky-2: #aedcf8;
+  --sky-3: #8ecdf5;
   --sky-4: #8698b4;
 
   /* frosted glass */
@@ -51,6 +51,12 @@
   --warn: #b32a2f;
   --warn-wash: rgba(179, 42, 47, 0.12);
   --ok: #2b7a52;
+  --amber: #f5b13a;
+  --amber-wash: rgba(245, 177, 58, 0.18);
+
+  /* shadows */
+  --nav-shadow: 0 8px 32px -8px rgba(30, 41, 59, 0.28);
+  --tile-shadow: 0 1px 3px rgba(30, 41, 59, 0.08);
 
   --r-card: 22px;
   --r-pill: 999px;
@@ -91,17 +97,35 @@
 }
 
 /* ---------------------------------------------------------------------------
-   The atmosphere. One gradient field on the body covers every route, so the
-   background is continuous rather than per-page — the reference reads as one
-   photograph behind floating glass, and a page-by-page background would break
-   that illusion on navigation.
+   The atmosphere. One image covers every route, so the background is continuous
+   rather than per-page — a page-by-page background would visibly reset on every
+   navigation.
+
+   It is painted on a fixed pseudo-element rather than with
+   `background-attachment: fixed`, which iOS Safari ignores: it would rescale and
+   jump on every scroll, and an installed PWA is mostly viewed on a phone.
+
+   The gradient on `body` stays as the fallback colour beneath the SVG, so the
+   page is never white while the asset loads.
 --------------------------------------------------------------------------- */
 body {
   min-height: 100vh;
   color: var(--ink);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: var(--sky-2);
+  background: linear-gradient(165deg, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/backdrop.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 /* ---------------------------------------------------------------------------
@@ -132,6 +156,14 @@ body {
   box-shadow: var(--ink-shadow);
 }
 
+.nav-shadow {
+  box-shadow: var(--nav-shadow);
+}
+
+.tile-shadow {
+  box-shadow: var(--tile-shadow);
+}
+
 /* Tabular numerals: live values stop reflowing as digits tick. */
 .num {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -157,6 +189,14 @@ body {
 .d5 { animation-delay: 0.29s; }
 .d6 { animation-delay: 0.35s; }
 
+.slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slide-down {
+  animation: slide-down 0.25s ease-out both;
+}
+
 /* Scene motion — only attached while the meter is actually reporting. */
 .flow      { animation: flow 1.5s linear infinite; }
 .spin-slow { animation: spin 9s linear infinite; transform-origin: center; }
@@ -170,6 +210,8 @@ body {
 @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
 @keyframes bob      { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes sheen    { 0%,100% { opacity: 0.16; } 50% { opacity: 0.42; } }
+@keyframes slide-up   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
 
 /* Focus stays visible on glass and on charcoal alike. */
 :where(a, button, input, select, [tabindex]):focus-visible {

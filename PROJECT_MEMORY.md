@@ -1,6 +1,6 @@
 # Project Memory — Smart Energy Meter (RoboDam 2026)
 
-_Last updated: 2026-08-25_
+_Last updated: 2026-08-26_
 
 > **New session? Read these three, in this order:**
 > 1. This file — session context, decisions and open threads.
@@ -23,19 +23,35 @@ progressive tariff engine with a verified inverse, a LightGBM month-end
 forecaster with serving guards, and a greedy appliance allocator. **160 tests
 pass.**
 
-Frontend (Next.js 16, React 19, Tailwind v4) has five routes — `/auth`,
-`/onboarding`, `/overview`, `/budget`, `/recommendations` — and is installable
-as a PWA. Verified end to end against live data on 2026-08-25: badge Live,
-574 W drawn, 839 EGP predicted against an 800 EGP target.
+Frontend (Next.js 16, React 19, Tailwind v4) now has seven routes — `/auth`,
+`/onboarding`, `/overview`, `/budget`, `/recommendations`, plus `/insights` and
+`/settings` from the new design — and is installable as a PWA. A mobile-first
+redesign has landed: floating `BottomNav`, minimal top bar, no scene layer.
+Verified running on 2026-08-26 with live data flowing (12.7k raw readings, most
+recent 1s old).
 
 Competition track: **Intelligent Systems and AI** (primary), IoT (supporting).
 
-**Next up:** an outsourced design is being produced elsewhere and will need
-integrating; the entry-form answers about hardware need softening; a backup demo
-video has not been recorded.
+**Next up:** `/insights` and `/settings` exist but are NOT in the nav — reachable
+only by typing the URL. The entry-form answers about hardware still need
+softening. No backup demo video. A from-scratch design brief sits at
+`design/DESIGN_BRIEF.md`, unused so far — decide whether the current design is
+the keeper before commissioning another.
 
 ## Key Decisions
 
+- **2026-08-26** — The background is one SVG (`public/backdrop.svg`) on a fixed
+  `body::before`, not `background-attachment: fixed`. _Why:_ iOS Safari ignores
+  that property — the image rescales and jumps on every scroll, and this installs
+  as a phone PWA. The `--sky-*` gradient stays on `body` as the pre-load fallback.
+- **2026-08-26** — `SceneBackground` removed from all three call sites but the
+  component kept on disk. _Why:_ the user asked for it gone; keeping the file
+  makes it one import away if it is wanted back for judges. Its removal also
+  killed a `fetchTelemetry` poll that ran every 5s purely to animate chrome.
+- **2026-08-26** — PWA `theme_color`/`background_color` moved from `#0b1016` to
+  `#aedcf8` and iOS `statusBarStyle` from `black-translucent` to `default`.
+  _Why:_ both were tuned for a dark scene. Over a light background the splash
+  flashed near-black and the iOS status bar drew white text on pale blue.
 - **2026-08-25** — Proxy `/api/v1/*` through Next rather than calling the
   backend cross-origin. _Why:_ the browser then sees one origin, so CORS never
   applies, and installing the PWA needs one HTTPS tunnel instead of two plus a
@@ -75,9 +91,6 @@ video has not been recorded.
 
 ## Open Questions
 
-- **The app has two names.** `Logo.tsx` exports `PRODUCT_NAME = "Wattwise"`
-  (shown in the nav) while `manifest.json` and the tab title say "Metermind".
-  Pick one and make it consistent.
 - When does the hardware actually arrive, and is there time to calibrate before
   submission?
 - The entry-form answers still claim *"We built a device"* and *"we tested it
@@ -90,6 +103,31 @@ video has not been recorded.
 
 ## Bugs Fixed
 
+- **2026-08-26** — `ForecastGauge` drew the red arc the wrong way round the dial
+  once the bill passed the halfway mark. `arcPath` set the SVG large-arc-flag
+  with `to - from > 0.5`, but the flag selects the path LONGER than 180 degrees
+  and this dial is a half circle, so it must always be 0. At 815 of a 1120 scale
+  the 131-degree arc rendered as the 229-degree reflex arc. _Fix:_ derive the
+  flag from the actual sweep in degrees. Hidden until now because the dark
+  remainder arc spans exactly 180 degrees, where both flag values look identical.
+- **2026-08-26** — `insights/page.tsx` guarded with
+  `prediction?.field !== null`, which is TRUE when `prediction` itself is null —
+  so the branch ran and then dereferenced `prediction`. The page would throw
+  before the first forecast arrived. _Fix:_ guard on `prediction` first. Same
+  file rendered the literal string `"undefinedd cycle"`.
+- **2026-08-26** — The dropped-in design did not compile: 34 type errors.
+  `StatTile` was called with `note` (an alias of `sub`) and `className`;
+  `SectionHeading` with `icon`; `settings/page.tsx` was missing five imports
+  (`Link`, `ArrowRight`, `Target`, `Gauge`, `TrendingUp`) — a runtime crash, not
+  just a type complaint. _Fix:_ widened the two components rather than rewriting
+  ~12 call sites, added the imports. Whoever generated it never ran a build.
+- **2026-08-25** — The app shipped under two names: `Logo.tsx` exported
+  `PRODUCT_NAME = "Wattwise"` for the nav while `manifest.json`, the tab title,
+  `offline.html`, the service-worker cache key and the design artboards all said
+  "Metermind". _Fix:_ Wattwise everywhere, and `layout.tsx` now imports
+  `PRODUCT_NAME` rather than repeating the string, so the metadata cannot drift
+  from the nav again. `manifest.json` and `sw.js` are static files that cannot
+  import, so those two remain the only hand-kept copies.
 - **2026-08-25** — Scene callout labels slid under the card grid and clipped
   mid-word. _Fix:_ all four stack in the left column now; anything right of ~25%
   of that canvas is unsafe because the card grid starts near 42% and the scene

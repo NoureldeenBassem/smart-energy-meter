@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import ServiceWorker from "@/components/ServiceWorker";
+import { PRODUCT_NAME } from "@/components/Logo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,18 +16,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Metermind — Smart Energy Meter",
+  title: `${PRODUCT_NAME} — Smart Energy Meter`,
   description:
     "Live household power monitoring, month-end bill prediction on the Egyptian tiered tariff, and budget-aware appliance recommendations.",
   manifest: "/manifest.json",
-  applicationName: "Metermind",
+  applicationName: PRODUCT_NAME,
   // Tells iOS to launch from the home screen without Safari's chrome. iOS still
   // ignores the manifest's `display` field, so this is the only way to get a
   // standalone launch there.
   appleWebApp: {
     capable: true,
-    title: "Metermind",
-    statusBarStyle: "black-translucent",
+    title: PRODUCT_NAME,
+    statusBarStyle: "default",
   },
   icons: {
     icon: [
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
  * 390px without horizontal overflow.
  */
 export const viewport: Viewport = {
-  themeColor: "#0b1016",
+  themeColor: "#aedcf8",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

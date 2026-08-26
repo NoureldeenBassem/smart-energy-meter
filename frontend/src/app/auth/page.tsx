@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 
-import SceneBackground from "@/components/SceneBackground";
 import Logo from "@/components/Logo";
 import { registerUser, loginUser } from "@/lib/api";
 
@@ -55,15 +54,10 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen p-4 sm:p-6">
-      {/* No device is claimed yet, so the scene here is illustrative chrome
-          rather than a status display: it animates to show what the product is
-          and asserts nothing about a meter this visitor does not have. */}
-      <SceneBackground live watts={820} kwhCycle={412} savingPct={12} />
-
-      <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-[1200px] items-stretch gap-5 lg:grid-cols-2">
-        {/* left half stays open so the background scene carries it */}
-        <div className="hidden lg:block" />
-
+      {/* Single centred column. The two-column split here existed only to leave
+          the left half open for the background scene; with no scene behind it
+          that column was dead space, so the form owns the page. */}
+      <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-[1200px] items-stretch">
         <div className="flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="mb-7">
@@ -78,7 +72,7 @@ export default function AuthPage() {
               progressive tariff, and get a daily plan that keeps you inside your budget.
             </p>
 
-            <div className="mt-6 rounded-[var(--r-card)] glass p-6 ">
+            <div className="mt-6 rounded-[var(--r-card)] glass p-6 rise d1">
               <div
                 role="group"
                 aria-label="Account mode"

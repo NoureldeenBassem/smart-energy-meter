@@ -1,14 +1,14 @@
 {
-  "name": "Metermind — Smart Energy Meter",
-  "short_name": "Metermind",
+  "name": "Wattwise — Smart Energy Meter",
+  "short_name": "Wattwise",
   "description": "Live household power, month-end bill prediction on Egypt's progressive tariff, and a daily appliance plan that keeps you inside your budget.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b1016",
-  "theme_color": "#0b1016",
+  "background_color": "#aedcf8",
+  "theme_color": "#aedcf8",
   "categories": ["utilities", "productivity"],
   "icons": [
     {

@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutGrid, Wallet, ListChecks, LogOut, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { clsx } from "clsx";
 
 import Logo from "@/components/Logo";
-import SceneBackground from "@/components/SceneBackground";
-import { fetchIsOnline, fetchTelemetry, type TelemetryDashboard } from "@/lib/api";
+import BottomNav from "@/components/BottomNav";
+import { fetchIsOnline, fetchRecommendations } from "@/lib/api";
 
 /**
  * Auth guard + chrome shared by every signed-in page.
@@ -20,17 +20,11 @@ import { fetchIsOnline, fetchTelemetry, type TelemetryDashboard } from "@/lib/ap
  *
  * NAVIGATION
  * ----------
- * A floating glass bar: mark and wordmark left, a segmented pill group centred,
- * status and account right. The active item sits in a solid charcoal pill with
- * its icon — but `aria-current="page"` is what actually carries that meaning.
- * The pill is the visual half only.
+ * Minimal top app bar: logo mark (left) + live badge (right).
+ * Floating bottom bar: 5 destinations (Home, Budget, Plan, Insights, Settings).
+ * The page background is the body gradient in globals.css; there is no scene
+ * layer, so nothing here fetches telemetry purely for decoration.
  */
-
-const NAV = [
-  { href: "/overview", label: "Overview", icon: LayoutGrid },
-  { href: "/budget", label: "Budget Planner", icon: Wallet },
-  { href: "/recommendations", label: "Recommendations", icon: ListChecks },
-] as const;
 
 export default function Shell({
   children,
@@ -42,7 +36,7 @@ export default function Shell({
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [scene, setScene] = useState<TelemetryDashboard | null>(null);
+  const [budgetAlert, setBudgetAlert] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -59,8 +53,7 @@ export default function Shell({
     setChecked(true);
   }, [router]);
 
-  // Online badge polls on its own short interval, independent of whatever the
-  // page is fetching — it stays responsive even on a page that loads once.
+  // Online badge + budget-alert poll on 5s interval
   useEffect(() => {
     if (!deviceId) return;
     let cancelled = false;
@@ -71,11 +64,12 @@ export default function Shell({
       } catch {
         if (!cancelled) setIsOnline(false);
       }
+      // Check budget alert for bottom nav badge
       try {
-        const t = await fetchTelemetry(deviceId);
-        if (!cancelled) setScene(t);
+        const recs = await fetchRecommendations(deviceId, "normal");
+        if (!cancelled) setBudgetAlert(recs.alert?.alert_triggered ?? false);
       } catch {
-        /* the scene keeps its last values; it is chrome, not a readout */
+        /* ignore */
       }
     };
     poll();
@@ -102,81 +96,32 @@ export default function Shell({
 
   return (
     <div className="min-h-screen">
-      {/* ONE scene behind the whole app — fixed, full-bleed, shared by every
-          route. The cards float on it. This is the structure the reference
-          uses: a photograph as the page background, not a picture in a tile. */}
-      <SceneBackground
-        live={isOnline}
-        watts={scene?.active_power ?? null}
-        kwhCycle={scene?.month_energy_kwh ?? null}
-        savingPct={null}
-      />
-      <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5 sm:pt-5">
-        <div className="mx-auto flex max-w-[1560px] items-center justify-between gap-3 rounded-[var(--r-pill)] glass-strong px-3 py-2.5">
-          <Link href="/overview" className="shrink-0 pl-0.5">
-            <Logo size={38} />
+      {/* Minimal top app bar — logo + live status */}
+      <header className="sticky top-0 z-40 px-4 pt-4">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between">
+          <Link href="/overview" className="shrink-0" aria-label="Wattwise home">
+            <Logo size={36} showName={false} />
           </Link>
-
-          <nav aria-label="Primary" className="min-w-0 flex-1">
-            <ul className="mx-auto flex w-fit max-w-full items-center gap-0.5 overflow-x-auto">
-              {NAV.map((item) => {
-                const active = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                      className={clsx(
-                        "flex items-center whitespace-nowrap rounded-[var(--r-pill)] text-[13px] font-medium transition-all duration-300",
-                        active
-                          ? "gap-2.5 bg-ink-panel py-1.5 pl-1.5 pr-5 font-semibold text-on-dark shadow-md"
-                          : "px-3.5 py-2.5 text-ink-2 hover:text-ink sm:px-4",
-                      )}
-                    >
-                      {active && (
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/12">
-                          <Icon className="h-4 w-4 text-accent" aria-hidden />
-                        </span>
-                      )}
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <span
-              className={clsx(
-                "hidden items-center gap-1.5 rounded-[var(--r-pill)] px-3 py-1.5 text-[11px] font-bold sm:flex",
-                isOnline ? "bg-accent text-ink-panel" : "bg-warn-wash text-warn",
-              )}
-            >
-              <span className={clsx("h-1.5 w-1.5 rounded-full", isOnline ? "pulse-dot bg-ink-panel" : "bg-warn")} />
-              {isOnline ? "Live" : "Offline"}
-            </span>
-            <Link
-              href="/budget"
-              aria-label="Settings and budget"
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-white hover:text-ink"
-            >
-              <Settings className="h-4 w-4" aria-hidden />
-            </Link>
-            <button
-              onClick={handleLogout}
-              title="Log out"
-              aria-label="Log out"
-              className="grid h-10 w-10 place-items-center rounded-full bg-ink-panel text-on-dark transition hover:opacity-90"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-            </button>
-          </div>
+          <span
+            className={clsx(
+              "flex items-center gap-1.5 rounded-[var(--r-pill)] px-3 py-1.5 text-[11px] font-bold",
+              isOnline ? "bg-accent text-ink-panel" : "bg-warn-wash text-warn",
+            )}
+            aria-live="polite"
+          >
+            <span className={clsx("h-1.5 w-1.5 rounded-full", isOnline ? "pulse-dot bg-ink-panel" : "bg-warn")} />
+            {isOnline ? "Live" : "Offline"}
+          </span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1560px] px-3 pb-12 pt-4 sm:px-5">{children(deviceId)}</main>
+      {/* Main content — bottom padding clears the floating nav */}
+      <main className="mx-auto max-w-[1200px] px-4 py-5 pb-28 sm:px-6">
+        {children(deviceId)}
+      </main>
+
+      {/* Floating bottom navigation */}
+      <BottomNav budgetAlert={budgetAlert} />
     </div>
   );
 }
