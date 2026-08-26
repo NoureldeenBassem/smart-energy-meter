@@ -27,7 +27,12 @@ function polar(fraction: number, radius: number): [number, number] {
 function arcPath(from: number, to: number, radius: number) {
   const [x0, y0] = polar(from, radius);
   const [x1, y1] = polar(to, radius);
-  const large = to - from > 0.5 ? 1 : 0;
+  // large-arc-flag selects the path LONGER than 180 degrees. This dial is a half
+  // circle, so `from` and `to` are fractions of 180 degrees and the sweep can
+  // never exceed it — the flag is therefore always 0. Deriving it from the span
+  // rather than hardcoding keeps it correct if the dial is ever widened.
+  const sweepDegrees = (to - from) * 180;
+  const large = sweepDegrees > 180 ? 1 : 0;
   return `M ${x0} ${y0} A ${radius} ${radius} 0 ${large} 1 ${x1} ${y1}`;
 }
 
