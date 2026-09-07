@@ -20,7 +20,7 @@ WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"
 # The LAN IP of the PC running docker compose. NOT "localhost" — localhost on
 # the ESP32 means the ESP32 itself. Find it with `ipconfig` on Windows and read
 # the IPv4 address of the adapter you are actually connected through.
-MQTT_BROKER_HOST = "192.168.1.11"
+MQTT_BROKER_HOST = "192.168.40.111"
 MQTT_BROKER_PORT = 1883
 
 # Must match the external_id of a Device row already registered through

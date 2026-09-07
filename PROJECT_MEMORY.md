@@ -1,6 +1,6 @@
 # Project Memory — Smart Energy Meter (RoboDam 2026)
 
-_Last updated: 2026-08-26_
+_Last updated: 2026-09-07_
 
 > **New session? Read these three, in this order:**
 > 1. This file — session context, decisions and open threads.
@@ -23,6 +23,11 @@ progressive tariff engine with a verified inverse, a LightGBM month-end
 forecaster with serving guards, and a greedy appliance allocator. **160 tests
 pass.**
 
+**The ESP32 firmware exists** (`firmware/`, MicroPython): real true-RMS sampling
+of a ZMPT101B and an SCT-013, publishing on the same contract the simulator used.
+Verified field-for-field. It is written but NOT yet flashed to a board, and its
+calibration constants are datasheet estimates, not measurements.
+
 Frontend (Next.js 16, React 19, Tailwind v4) now has seven routes — `/auth`,
 `/onboarding`, `/overview`, `/budget`, `/recommendations`, plus `/insights` and
 `/settings` from the new design — and is installable as a PWA. A mobile-first
@@ -32,14 +37,27 @@ recent 1s old).
 
 Competition track: **Intelligent Systems and AI** (primary), IoT (supporting).
 
-**Next up:** `/insights` and `/settings` exist but are NOT in the nav — reachable
-only by typing the URL. The entry-form answers about hardware still need
-softening. No backup demo video. A from-scratch design brief sits at
-`design/DESIGN_BRIEF.md`, unused so far — decide whether the current design is
-the keeper before commissioning another.
+**Next up:** flash the firmware to the board. Before the ESP32 can reach the
+broker, port 1883 needs an inbound firewall rule and a portproxy from 0.0.0.0 to
+127.0.0.1 — both require an elevated PowerShell, which is the one step that could
+not be automated. The entry-form answers about hardware still need softening, and
+no backup demo video has been recorded. `design/DESIGN_BRIEF.md` is unused —
+decide whether the current design is the keeper before commissioning another.
 
 ## Key Decisions
 
+- **2026-09-07** — Postgres and Mosquitto now run in **WSL Ubuntu, not Docker**.
+  _Why:_ Docker Desktop on this machine recreates its socket files but never
+  boots its WSL VM, so `\.\pipe\dockerDesktopLinuxEngine` never appears and
+  `docker compose` cannot run. Docker was only ever providing those two
+  services. `backend/scripts/setup_wsl_services.sh` installs and configures both
+  on the SAME ports as docker-compose (15432, 1883), so nothing in the app
+  changed. Run it with `wsl -d Ubuntu -u root -- bash <path>` — `-u root` avoids
+  a sudo password prompt entirely.
+- **2026-09-07** — A keepalive process must hold the WSL distro open. _Why:_ WSL
+  shuts a distro down when its last process exits, which silently stops both
+  services; the first run looked successful and then the ports vanished. The
+  services are started under `sleep infinity` for this reason.
 - **2026-08-26** — The background is one SVG (`public/backdrop.svg`) on a fixed
   `body::before`, not `background-attachment: fixed`. _Why:_ iOS Safari ignores
   that property — the image rescales and jumps on every scroll, and this installs
@@ -163,15 +181,23 @@ the keeper before commissioning another.
 - **"Offline" with no simulator running is correct.** So is a desaturated,
   motionless background scene.
 
-## Running it (five windows, all must stay open)
+## Running it (four windows, all must stay open)
 
-From `backend/`, in PowerShell — note `npm.cmd` / `npx.cmd`, since bare names
-hit blocked `.ps1` shims:
+Docker is NOT used. From `backend/`, in PowerShell — note `npm.cmd` / `npx.cmd`,
+since bare names hit blocked `.ps1` shims:
 
-1. `docker compose up -d` then `venv\Scripts\python.exe -m uvicorn app.main:app --port 8000`
-2. `venv\Scripts\python.exe -m app.workers.telemetry_worker`
-3. `venv\Scripts\python.exe scripts\mock_esp32.py --interval 5`
-4. From `frontend/`: `npm.cmd run build` then `npm.cmd start`
-5. `npx.cmd cloudflared tunnel --url http://localhost:3000` — for phone/PWA only
+1. `wsl -d Ubuntu -u root -- bash -c "service postgresql start; service mosquitto start; sleep infinity"`
+   — the `sleep infinity` is load-bearing; without it WSL stops the distro and
+   both services die.
+2. `venv\Scripts\python.exe -m uvicorn app.main:app --port 8000`
+3. `venv\Scripts\python.exe -m app.workers.telemetry_worker`
+4. From `frontend/`: `npm.cmd start`
 
-Demo account on the dev database: `demo@example.com` / `DemoPass123!`.
+First time only: `venv\Scripts\python.exe create_tables.py`.
+`npx.cmd cloudflared tunnel --url http://localhost:3000` for phone/PWA.
+
+Do NOT run `scripts/mock_esp32.py` any more — the board is the data source, and
+running both would interleave invented and measured readings in one series.
+
+Demo account on the dev database: `demo@example.com` / `DemoPass123!`,
+with device `esp32_meter_01` already registered.

@@ -14,6 +14,8 @@ nothing downstream could tell them apart.
 | `config.py` | Everything you edit — Wi-Fi, broker IP, pins, calibration |
 | `sensors.py` | True-RMS sampling and real-power maths |
 | `main.py` | Wi-Fi, NTP, MQTT, buffering, the publish loop |
+| `test_current.py` | Bench test for the CT clamp alone — no Wi-Fi, no broker, no mains on the board |
+| `arduino/test_current/test_current.ino` | The same bench test as an Arduino sketch, for the Arduino IDE. **Uploading it erases MicroPython** — see below |
 
 ## Wiring
 
@@ -96,6 +98,111 @@ python -m mpremote repl
 
 `main.py` runs automatically on boot. Ctrl-C in the REPL stops it; Ctrl-D
 reboots.
+
+## Testing the current clamp on its own
+
+Do this **before** wiring the ZMPT101B. The CT clamp is the non-invasive sensor;
+the voltage module is the one that touches live mains, and there is no reason to
+take that risk while the easy half is unproven.
+
+`test_current.py` needs no Wi-Fi, no broker, no `DEVICE_ID` and no voltage
+sensor. It reads GPIO 35, prints a wiring verdict, then streams live readings.
+
+### With Thonny (recommended — no command line at all)
+
+Thonny can install MicroPython itself, so you never touch `esptool`.
+
+1. **Install Thonny** from [thonny.org](https://thonny.org). Plug the ESP32 in.
+2. **Install MicroPython on the board** (once):
+   **Tools → Options → Interpreter**, set the interpreter to
+   *MicroPython (ESP32)*, then click **Install or update MicroPython** at the
+   bottom of that dialog. Choose your port, variant *ESP32 / ESP32 Generic*, and
+   press Install. Wait for it to finish, then **OK**.
+3. **Pick the port.** Same dialog, *Port* dropdown → your device. The Shell pane
+   at the bottom should now show a `>>>` prompt. If it does not, press the red
+   Stop button once — the board may be mid-script.
+4. **Upload the two files this test imports.** Open the **Files** pane
+   (*View → Files*). In the top half, browse to this `firmware/` folder.
+   Right-click `config.py` → **Upload to /**. Do the same for `sensors.py`.
+   They should appear in the lower *MicroPython device* half.
+   Do **not** upload `main.py` yet — it would start trying to reach Wi-Fi and
+   the broker on every boot, which is exactly the noise this test avoids.
+5. **Open `test_current.py`** (*File → Open* → this `firmware/` folder) and
+   press **F5** / the green Run button.
+
+Thonny runs the open editor file on the board without storing it, so nothing on
+the device is overwritten. Output appears in the Shell pane. **Stop with the red
+Stop button** (or Ctrl-C in the Shell) — the script catches that and prints
+`stopped.`
+
+Why `config.py` and `sensors.py` have to be there: the test imports the pin
+number, the calibration constants and the filter coefficient from them rather
+than keeping its own copies, so it can never drift from what the meter actually
+does. You need both files on the board for the real firmware anyway.
+
+### With mpremote instead
+
+If you would rather stay on the command line:
+
+```bash
+python -m mpremote run test_current.py
+```
+
+`run` executes it from your PC without storing it on the board. `config.py` and
+`sensors.py` still need to be on the device (`python -m mpremote fs cp config.py
+sensors.py :`). If `main.py` is already looping, mpremote interrupts it; the
+board resumes normal operation on the next reset.
+
+### What it tells you
+
+It reports three things before any scaling can hide them:
+
+- **DC bias** — should sit near 2048 counts (~1.65 V). Near 0 means the 10k/10k
+  divider is not connected. This is the fault worth catching first: with no bias
+  the negative half of every cycle is clipped off at 0, so the RMS reads roughly
+  half-right, which looks plausible and is wrong.
+- **Clipping** — raw min/max hitting 0 or 4095 means the burden resistor is too
+  large. A clipped peak reads *low*, not high, because the flat top removes
+  energy from the RMS.
+- **Sample rate and filter corner** — see the note below.
+
+Then a live table. Switch a known load on and off; `raw_i` and `amps` should
+move immediately. Amps are scaled with the datasheet-estimate `CURRENT_CAL`, so
+treat them as ballpark until you calibrate — the raw counts are the number to
+trust here.
+
+### If you are using the Arduino IDE instead
+
+`arduino/test_current/test_current.ino` is the same test as a sketch, kept for
+anyone who prefers the Arduino IDE. It needs no libraries. Two caveats: uploading
+it **overwrites the MicroPython interpreter**, and the Arduino core does not read
+the ADC at the same speed as MicroPython, so a `CURRENT_CAL` calibrated with the
+sketch is not valid for the firmware. The MicroPython path above avoids both.
+
+### The high-pass corner moves with sample rate
+
+`_HPF_ALPHA` is a fixed coefficient, but the corner frequency it produces is
+not — it scales with how fast `adc.read()` returns:
+
+```
+f_corner ~= (1 - alpha) / (2 * pi * dt)
+```
+
+| Effective sample rate | Corner | Gain at 50 Hz |
+|---|---|---|
+| 10 kHz | 6.4 Hz | 0.992 |
+| 20 kHz | 12.7 Hz | 0.969 |
+| 66 kHz | 42.0 Hz | **0.766** |
+
+At 20 kHz — the regime `sensors.py` was written for — 50 Hz passes essentially
+untouched. On a faster read loop the corner climbs toward the mains frequency
+and the filter begins attenuating the signal it exists to pass, silently.
+
+This does not make the meter wrong: calibration divides the attenuation straight
+back out. It does mean **`CURRENT_CAL` is only valid at the sample rate it was
+calibrated at**, and that no datasheet-derived default can be correct. If the
+sampling loop ever changes speed, recalibrate. `test_current.py` prints the
+measured rate and warns when the gain drops below 0.90.
 
 ## Calibration
 
