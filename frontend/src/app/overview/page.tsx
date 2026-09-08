@@ -230,24 +230,24 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Today's kWh */}
         <Card className="rise d2 p-4">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Today's Energy</span>
-            <span className="num text-sm font-bold text-ink">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Today's Energy</span>
+          <p className="mt-2 flex items-baseline gap-1.5">
+            <span className="num text-[30px] font-bold leading-none text-ink">
               {telemetry ? telemetry.today_energy_kwh.toFixed(2) : "--"}
             </span>
-          </div>
-          <p className="mt-2 num text-[34px] font-bold leading-none text-ink">kWh</p>
+            <span className="text-sm font-semibold text-ink-3">kWh</span>
+          </p>
         </Card>
 
         {/* Predicted Bill (mini) */}
         <Card className="rise d3 p-4">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Predicted Bill</span>
-            <span className={clsx("num text-sm font-bold", prediction && prediction.predicted_bill_egp > (recs?.target_bill_egp ?? Infinity) ? "text-warn" : "text-accent-ink")}>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Predicted Bill</span>
+          <p className="mt-2 flex items-baseline gap-1.5">
+            <span className={clsx("num text-[30px] font-bold leading-none", prediction && prediction.predicted_bill_egp > (recs?.target_bill_egp ?? Infinity) ? "text-warn" : "text-accent-ink")}>
               {prediction ? prediction.predicted_bill_egp.toFixed(0) : "--"}
             </span>
-          </div>
-          <p className="mt-2 num text-[24px] font-bold leading-none text-ink">EGP</p>
+            <span className="text-sm font-semibold text-ink-3">EGP</span>
+          </p>
         </Card>
 
         {/* Budget Progress */}
@@ -276,13 +276,13 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
 
         {/* Cycle Position */}
         <Card className="rise d5 p-4">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Cycle Day</span>
-            <span className="num text-sm font-bold text-ink">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Cycle Day</span>
+          <p className="mt-2 flex items-baseline gap-1.5">
+            <span className="num text-[30px] font-bold leading-none text-ink">
               {prediction ? `${prediction.day_of_month}/${prediction.cycle_length_days}` : "--"}
             </span>
-          </div>
-          <p className="mt-2 num text-[24px] font-bold leading-none text-ink">days</p>
+            <span className="text-sm font-semibold text-ink-3">days</span>
+          </p>
         </Card>
       </div>
 

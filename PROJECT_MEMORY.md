@@ -2,12 +2,13 @@
 
 _Last updated: 2026-09-07_
 
-> **New session? Read these three, in this order:**
-> 1. This file — session context, decisions and open threads.
-> 2. `SUBMISSION_STATUS.md` — the honest engineering account. What works, what
+> **New session? Read these four, in this order:**
+> 1. `ONBOARDING.md` — **COMPLETE PROJECT GUIDE** (start here if unfamiliar). Architecture, how to run it, every decision and why.
+> 2. This file — session context, decisions and open threads.
+> 3. `SUBMISSION_STATUS.md` — the honest engineering account. What works, what
 >    is partial, what is not built, with measured numbers and the method beside
->    each. It is the most valuable document here; do not duplicate it.
-> 3. `README.md` — architecture, setup commands, model performance table.
+>    each.
+> 4. `README.md` — architecture, setup commands, model performance table.
 >
 > Repo: https://github.com/NoureldeenBassem/smart-energy-meter (public)
 
