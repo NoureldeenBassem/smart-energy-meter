@@ -157,7 +157,7 @@ export default function PowerGauge({
           x={CX}
           y={CY + 4}
           textAnchor="middle"
-          className="num fill-white"
+          className="num fill-ink"
           style={{ fontSize: 40, fontWeight: 700 }}
         >
           {value === null ? "--" : value.toFixed(0)}
@@ -166,7 +166,7 @@ export default function PowerGauge({
           x={CX}
           y={CY + 26}
           textAnchor="middle"
-          className="fill-[#9aa5b4]"
+          className="fill-ink-3"
           style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.14em" }}
         >
           WATTS
@@ -177,7 +177,7 @@ export default function PowerGauge({
           x={X0 - 1}
           y={Y0 + 21}
           textAnchor="middle"
-          className="fill-[#9aa5b4]"
+          className="fill-ink-3"
           style={{ fontSize: 11 }}
         >
           0
@@ -186,7 +186,7 @@ export default function PowerGauge({
           x={X1 + 1}
           y={Y1 + 21}
           textAnchor="middle"
-          className="fill-[#9aa5b4]"
+          className="fill-ink-3"
           style={{ fontSize: 11 }}
         >
           {fullScaleWatts}
@@ -194,7 +194,7 @@ export default function PowerGauge({
       </svg>
 
       {scaleNote && (
-        <p className="mt-1 text-center text-xs text-on-dark-2">{scaleNote}</p>
+        <p className="mt-1 text-center text-xs text-ink-3">{scaleNote}</p>
       )}
       {value !== null && value > fullScaleWatts && (
         <p className="mt-1 text-xs font-semibold text-[#f2726b]">
