@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LayoutGrid, Wallet, ListChecks, TrendingUp, Settings } from "lucide-react";
 import { clsx } from "clsx";
 
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
+
 /**
  * Floating bottom navigation — replaces the top pill bar.
  *
@@ -14,14 +16,12 @@ import { clsx } from "clsx";
  */
 
 const NAV_ITEMS = [
-  { href: "/overview", label: "Home", icon: LayoutGrid },
-  { href: "/budget", label: "Budget", icon: Wallet },
-  { href: "/recommendations", label: "Plan", icon: ListChecks },
-  { href: "/insights", label: "Insights", icon: TrendingUp },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/overview", labelKey: "nav.home" as TranslationKey, icon: LayoutGrid },
+  { href: "/budget", labelKey: "nav.budget" as TranslationKey, icon: Wallet },
+  { href: "/recommendations", labelKey: "nav.plan" as TranslationKey, icon: ListChecks },
+  { href: "/insights", labelKey: "nav.insights" as TranslationKey, icon: TrendingUp },
+  { href: "/settings", labelKey: "nav.settings" as TranslationKey, icon: Settings },
 ] as const;
-
-type NavItem = (typeof NAV_ITEMS)[number];
 
 interface BottomNavProps {
   /** Optional badge count for Budget tab (alert triggered) */
@@ -30,6 +30,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ budgetAlert = false }: BottomNavProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <nav
@@ -54,7 +55,7 @@ export default function BottomNav({ budgetAlert = false }: BottomNavProps) {
               )}
             >
               <Icon className="h-5 w-5" aria-hidden />
-              <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+              <span className="text-[10px] font-semibold leading-none">{t(item.labelKey)}</span>
               {item.href === "/budget" && budgetAlert && (
                 <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-warn" />
               )}

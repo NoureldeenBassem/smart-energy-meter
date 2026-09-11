@@ -31,6 +31,7 @@ import {
   fetchActiveBudget,
   type Budget,
 } from "@/lib/api";
+import { useLanguage, LANGUAGE_LABELS, type Language } from "@/lib/i18n";
 
 /**
  * Settings — NEW screen added in Phase 4.
@@ -44,17 +45,11 @@ import {
  */
 
 type Theme = "system" | "light" | "dark";
-type Language = "en" | "ar";
 
 const THEME_LABELS: Record<Theme, string> = {
   system: "System",
   light: "Light",
   dark: "Dark",
-};
-
-const LANGUAGE_LABELS: Record<Language, string> = {
-  en: "English",
-  ar: "العربية",
 };
 
 interface SettingsBodyProps {
@@ -63,9 +58,9 @@ interface SettingsBodyProps {
 
 function SettingsBody({ deviceId }: SettingsBodyProps) {
   const router = useRouter();
+  const { language, setLanguage, t } = useLanguage();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [theme, setTheme] = useState<Theme>("system");
-  const [language, setLanguage] = useState<Language>("en");
   const [budgetAlertEnabled, setBudgetAlertEnabled] = useState(true);
   const [alertThreshold, setAlertThreshold] = useState(85);
   const [loading, setLoading] = useState(true);
@@ -89,12 +84,11 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
     })();
   }, []);
 
-  // Load preferences from localStorage
+  // Load theme preference from localStorage. Language is loaded by the
+  // shared useLanguage() hook itself.
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const savedLang = localStorage.getItem("language") as Language | null;
     if (savedTheme) setTheme(savedTheme);
-    if (savedLang) setLanguage(savedLang);
   }, []);
 
   // Apply theme to document
@@ -148,16 +142,22 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
   const handleDeleteAccount = async () => {
     if (!confirm("Delete your account? This cannot be undone.")) return;
     try {
-      // Call backend to delete account
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/v1/auth/delete`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/v1/auth/me`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-    } catch {
-      // Ignore errors, clear local anyway
+      if (!res.ok) {
+        setError("Could not delete the account. Please try again.");
+        return;
+      }
+    } catch (err) {
+      setError(apiErrorMessage(err, "Could not delete the account. Please try again."));
+      return;
     }
+    // Only clear local state and redirect once the server confirms the
+    // account is actually gone — never before, and never on a failed request.
     localStorage.clear();
     router.replace("/auth");
   };
@@ -180,9 +180,9 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
           <Wifi className="h-5 w-5 text-ink-panel" aria-hidden />
         </span>
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-ink">Settings</h1>
+          <h1 className="text-[28px] font-bold tracking-tight text-ink">{t("settings.title")}</h1>
           <p className="mt-1 max-w-2xl text-sm text-ink-3">
-            Manage your account, device, and display preferences.
+            {t("settings.subtitle")}
           </p>
         </div>
       </div>
@@ -200,43 +200,43 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
 
       {/* ============ 1. PROFILE ============ */}
       <Card className="p-5">
-        <SectionHeading title="Profile" icon={<User className="h-4 w-4" />} />
+        <SectionHeading title={t("settings.profile.title")} icon={<User className="h-4 w-4" />} />
         <div className="space-y-4 mt-2">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Email</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">{t("settings.profile.email")}</p>
               <p className="mt-0.5 font-medium text-ink">{savedEmail}</p>
             </div>
             <button
               type="button"
               className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
             >
-              Change
+              {t("settings.profile.change")}
             </button>
           </div>
           <div className="flex items-center justify-between gap-4 border-t border-white/50 pt-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Password</p>
-              <p className="mt-0.5 text-sm text-ink-3">Last updated —</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">{t("settings.profile.password")}</p>
+              <p className="mt-0.5 text-sm text-ink-3">{t("settings.profile.lastUpdated")}</p>
             </div>
             <button
               type="button"
               className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
             >
-              Update
+              {t("settings.profile.update")}
             </button>
           </div>
           <div className="flex items-center justify-between gap-4 border-t border-white/50 pt-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warn">Delete account</p>
-              <p className="mt-0.5 text-sm text-ink-3">Permanently remove your data</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warn">{t("settings.profile.deleteAccount")}</p>
+              <p className="mt-0.5 text-sm text-ink-3">{t("settings.profile.deleteAccountHint")}</p>
             </div>
             <button
               type="button"
               onClick={handleDeleteAccount}
               className="shrink-0 rounded-[var(--r-pill)] bg-warn-wash px-3.5 py-1.5 text-sm font-semibold text-warn transition hover:bg-warn/20"
             >
-              Delete
+              {t("settings.profile.delete")}
             </button>
           </div>
         </div>
@@ -244,43 +244,43 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
 
       {/* ============ 2. DEVICE ============ */}
       <Card className="p-5">
-        <SectionHeading title="Device" icon={<Wifi className="h-4 w-4" />} />
+        <SectionHeading title={t("settings.device.title")} icon={<Wifi className="h-4 w-4" />} />
         <div className="space-y-4 mt-2">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Device ID</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">{t("settings.device.id")}</p>
               <p className="mt-0.5 num font-mono text-sm text-ink truncate max-w-[200px]">{deviceId}</p>
             </div>
             <button
               type="button"
               className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
             >
-              Rename
+              {t("settings.device.rename")}
             </button>
           </div>
           <div className="flex items-center justify-between gap-4 border-t border-white/50 pt-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">Re-pair device</p>
-              <p className="mt-0.5 text-sm text-ink-3">Connect a different meter</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">{t("settings.device.repair")}</p>
+              <p className="mt-0.5 text-sm text-ink-3">{t("settings.device.repairHint")}</p>
             </div>
             <button
               type="button"
               className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
             >
-              <RotateCcw className="h-3.5 w-3.5 inline mr-1.5" /> Re-pair
+              <RotateCcw className="h-3.5 w-3.5 inline mr-1.5" /> {t("settings.device.repairAction")}
             </button>
           </div>
           <div className="flex items-center justify-between gap-4 border-t border-white/50 pt-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warn">Remove device</p>
-              <p className="mt-0.5 text-sm text-ink-3">Disconnect this meter</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warn">{t("settings.device.remove")}</p>
+              <p className="mt-0.5 text-sm text-ink-3">{t("settings.device.removeHint")}</p>
             </div>
             <button
               type="button"
               onClick={handleRemoveDevice}
               className="shrink-0 rounded-[var(--r-pill)] bg-warn-wash px-3.5 py-1.5 text-sm font-semibold text-warn transition hover:bg-warn/20"
             >
-              <Trash2 className="h-3.5 w-3.5 inline mr-1.5" /> Remove
+              <Trash2 className="h-3.5 w-3.5 inline mr-1.5" /> {t("settings.device.removeAction")}
             </button>
           </div>
         </div>
@@ -288,7 +288,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
 
       {/* ============ 3. NOTIFICATIONS ============ */}
       <Card className="p-5">
-        <SectionHeading title="Notifications" icon={<Bell className="h-4 w-4" />} />
+        <SectionHeading title={t("settings.notifications.title")} icon={<Bell className="h-4 w-4" />} />
         <div className="space-y-4 mt-2">
           {/* Budget alert toggle */}
           <div className="flex items-center justify-between gap-4">
@@ -301,8 +301,8 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                 )}
               </span>
               <div>
-                <p className="font-semibold text-ink">Budget alert</p>
-                <p className="text-sm text-ink-3">Notify when spending crosses your threshold</p>
+                <p className="font-semibold text-ink">{t("settings.notifications.budgetAlert")}</p>
+                <p className="text-sm text-ink-3">{t("settings.notifications.budgetAlertHint")}</p>
               </div>
             </div>
             <button
@@ -332,7 +332,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
           {budgetAlertEnabled && (
             <div className="border-t border-white/50 pt-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-3">
-                Alert threshold
+                {t("settings.notifications.threshold")}
               </p>
               <div className="flex gap-2">
                 {[75, 85, 90, 95].map((t) => (
@@ -355,7 +355,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                 ))}
               </div>
               <p className="mt-2 text-xs text-ink-3">
-                You'll be notified when {alertThreshold}% of your allowed kWh is used.
+                {t("settings.notifications.thresholdHint", { pct: alertThreshold })}
               </p>
             </div>
           )}
@@ -368,11 +368,11 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
               disabled={saving}
               className="w-full rounded-[var(--r-pill)] bg-ink-panel py-3 text-sm font-bold text-on-dark transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {saving ? "Saving..." : "Save notification settings"}
+              {saving ? t("settings.notifications.saving") : t("settings.notifications.save")}
             </button>
           ) : (
             <p className="text-sm text-ink-3">
-              Set a target bill in <a href="/budget" className="font-semibold underline decoration-dotted underline-offset-2">Budget</a> to enable alerts.
+              {t("settings.notifications.setBudgetFirst")}
             </p>
           )}
 
@@ -384,12 +384,12 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                   <Bell className="h-5 w-5 text-ink-3" aria-hidden />
                 </span>
                 <div>
-                  <p className="font-semibold text-ink">Push notifications</p>
-                  <p className="text-sm text-ink-3">Coming soon</p>
+                  <p className="font-semibold text-ink">{t("settings.notifications.push")}</p>
+                  <p className="text-sm text-ink-3">{t("settings.notifications.soon")}</p>
                 </div>
               </div>
               <span className="shrink-0 rounded-[var(--r-pill)] bg-white/30 px-2.5 py-1 text-[10px] font-bold text-ink-3">
-                Soon
+                {t("settings.notifications.soon")}
               </span>
             </div>
           </div>
@@ -398,11 +398,11 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
 
       {/* ============ 4. DISPLAY ============ */}
       <Card className="p-5">
-        <SectionHeading title="Display" icon={<Monitor className="h-4 w-4" />} />
+        <SectionHeading title={t("settings.display.title")} icon={<Monitor className="h-4 w-4" />} />
         <div className="space-y-4 mt-2">
           {/* Theme */}
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">Theme</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">{t("settings.display.theme")}</p>
             <div role="group" aria-label="Theme" className="flex flex-wrap gap-2 rounded-[var(--r-pill)] bg-white/50 p-1.5">
               {(["system", "light", "dark"] as Theme[]).map((t) => (
                 <button
@@ -424,21 +424,18 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-ink-3">System follows your OS setting.</p>
+            <p className="mt-2 text-xs text-ink-3">{t("settings.display.themeHint")}</p>
           </div>
 
           {/* Language */}
           <div className="border-t border-white/50 pt-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">Language</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">{t("settings.display.language")}</p>
             <div role="group" aria-label="Language" className="flex flex-wrap gap-2 rounded-[var(--r-pill)] bg-white/50 p-1.5">
               {(["en", "ar"] as Language[]).map((l) => (
                 <button
                   key={l}
                   type="button"
-                  onClick={() => {
-                    setLanguage(l);
-                    localStorage.setItem("language", l);
-                  }}
+                  onClick={() => setLanguage(l)}
                   aria-pressed={language === l}
                   className={clsx(
                     "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
@@ -451,12 +448,14 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-ink-3">Arabic RTL support is planned.</p>
+            <p className="mt-2 text-xs text-ink-3">
+              {language === "ar" ? "التطبيق الآن بالعربية، من اليمين إلى اليسار." : "Nav and this page translate; the rest of the app is next."}
+            </p>
           </div>
 
           {/* Units */}
           <div className="border-t border-white/50 pt-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">Units</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">{t("settings.display.units")}</p>
             <div role="group" aria-label="Units" className="flex flex-wrap gap-2 rounded-[var(--r-pill)] bg-white/50 p-1.5">
               <button
                 type="button"
@@ -473,7 +472,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
 
       {/* ============ 5. ABOUT ============ */}
       <Card className="p-5">
-        <SectionHeading title="About" icon={<Globe className="h-4 w-4" />} />
+        <SectionHeading title={t("settings.about.title")} icon={<Globe className="h-4 w-4" />} />
         <div className="space-y-4 mt-2">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
@@ -509,7 +508,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
               </span>
               <div>
                 <p className="font-semibold text-ink">Support</p>
-                <p className="text-sm text-ink-3">support@wattwise.example</p>
+                <p className="text-sm text-ink-3">noureldinbassem.work@gmail.com</p>
               </div>
             </div>
           </div>
@@ -544,7 +543,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             className="mt-4 w-full flex items-center justify-center gap-2 rounded-[var(--r-pill)] bg-warn-wash py-3 text-sm font-bold text-warn transition hover:bg-warn/20"
           >
             <LogOut className="h-4 w-4" />
-            Log out
+            {t("settings.about.logout")}
           </button>
         </div>
       </Card>

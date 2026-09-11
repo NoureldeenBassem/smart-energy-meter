@@ -38,6 +38,7 @@ export default function AuthPage() {
           : await loginUser(email, password);
 
       localStorage.setItem("access_token", token);
+      localStorage.setItem("user_email", email);
       router.push("/onboarding");
     } catch (err: any) {
       const detail = err?.response?.data?.detail;

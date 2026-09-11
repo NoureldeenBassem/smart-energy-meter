@@ -3,11 +3,13 @@ Auth routes: register and login. Issues a long-lived (1-year) JWT,
 matching ACCESS_TOKEN_EXPIRE_MINUTES in core/security.py.
 """
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.models import Appliance
 from app.core.database import get_db
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.security import hash_password, verify_password, create_access_token, get_current_user_id
 from app.models.models import User
 from app.api.schemas import UserCreate, UserLogin, TokenOut
 
@@ -73,6 +75,29 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
     token = create_access_token({"sub": str(user.user_id)})
     return TokenOut(access_token=token)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Permanently deletes the current user's account and everything owned by
+    it — devices, appliances, budgets, and (through devices) all telemetry —
+    via the ondelete="CASCADE" foreign keys already declared in models.py.
+
+    The frontend previously called a DELETE /auth/delete route that never
+    existed: the fetch failed, the error was silently swallowed, and the UI
+    logged the user out and cleared local storage as if deletion had
+    succeeded. The account was never actually removed. This is the real
+    endpoint that route should have been.
+    """
+    user = db.query(User).filter(User.user_id == UUID(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
 
 
 @router.post("/login", response_model=TokenOut)
