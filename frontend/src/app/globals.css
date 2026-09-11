@@ -62,6 +62,73 @@
   --r-pill: 999px;
 }
 
+/* ===========================================================================
+   DARK MODE — same tokens, retinted, zero component changes required.
+   ---------------------------------------------------------------------------
+   Every surface in the app already reads its color through one of the custom
+   properties above (via the @theme inline mapping below, e.g. `text-ink`,
+   `bg-glass`, `text-warn`). Overriding just this block is therefore enough to
+   re-theme the whole app — no component file touches a literal hex color.
+
+   Previously :root.dark was toggled by Settings but this block did not
+   exist, so the toggle changed nothing visible. That is the bug this fixes.
+=========================================================================== */
+:root.dark {
+  /* atmosphere — deep charcoal-navy instead of sky blue, same three-stop
+     structure as light mode so body's gradient formula needs no change */
+  --sky-1: #232a38;
+  --sky-2: #1a1f28;
+  --sky-3: #12151b;
+  --sky-4: #4a5568;
+
+  /* frosted glass — light-tinted overlay on a dark base, since white glass at
+     light-mode opacity would look identical to the bare background here */
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.11);
+  --glass-soft: rgba(255, 255, 255, 0.045);
+  --glass-line: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 18px 40px -20px rgba(0, 0, 0, 0.6);
+
+  /* charcoal anchor — lightened slightly so the "dark panel" surface still
+     reads as a distinct, raised surface against a now-dark background rather
+     than disappearing into it */
+  --ink-panel: #3a4048;
+  --ink-panel-2: #454c56;
+  --ink-panel-line: rgba(255, 255, 255, 0.12);
+  --ink-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.7);
+
+  /* type — flipped to light. --ink reuses the exact value light mode already
+     defined as "text for a dark panel" (--on-dark), since body text in dark
+     mode has exactly that job now */
+  --ink: #f1f4f8;
+  --ink-2: #c7cdd6;
+  --ink-3: #9aa5b4;
+  --on-dark: #f1f4f8;
+  --on-dark-2: #9aa5b4;
+
+  /* accent — the lime fill itself stays legible on dark unchanged; only
+     --accent-ink (accent-colored TEXT) flips, since the light-mode value
+     (#5c6400, a dark olive meant for light glass) would be unreadable on a
+     dark surface */
+  --accent: #e3ec4a;
+  --accent-2: #cbd42f;
+  --accent-ink: #eef27a;
+  --accent-wash: rgba(227, 236, 74, 0.16);
+
+  /* status — brightened for contrast against dark surfaces; the light-mode
+     values were tuned for white backgrounds and read as near-invisible here */
+  --warn: #ff7a7e;
+  --warn-wash: rgba(255, 122, 126, 0.16);
+  --ok: #4ade80;
+  --amber: #fbbf46;
+  --amber-wash: rgba(251, 191, 70, 0.18);
+
+  /* shadows — darker/softer; light-mode shadow colors were tuned against a
+     pale background and read as a visible dark smudge here */
+  --nav-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.55);
+  --tile-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
 @theme inline {
   --color-sky-1: var(--sky-1);
   --color-sky-2: var(--sky-2);
@@ -126,6 +193,13 @@ body::before {
   background-position: center;
   background-repeat: no-repeat;
   pointer-events: none;
+}
+
+/* Dark mode gets its own backdrop asset (backdrop-dark.svg) — the light
+   backdrop's pale blue hexagons over a bright base would clash badly laid
+   over dark cards; the dark variant is the same geometry, retinted. */
+:root.dark body::before {
+  background-image: url("/backdrop-dark.svg");
 }
 
 /* ---------------------------------------------------------------------------

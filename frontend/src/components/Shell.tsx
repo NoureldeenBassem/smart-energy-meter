@@ -9,6 +9,7 @@ import { clsx } from "clsx";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/BottomNav";
 import { fetchIsOnline, fetchRecommendations } from "@/lib/api";
+import { useTheme } from "@/lib/theme";
 
 /**
  * Auth guard + chrome shared by every signed-in page.
@@ -33,6 +34,7 @@ export default function Shell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  useTheme(); // applies the saved theme to <html> on every authenticated page, not just Settings
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [isOnline, setIsOnline] = useState(false);

@@ -32,6 +32,7 @@ import {
   type Budget,
 } from "@/lib/api";
 import { useLanguage, LANGUAGE_LABELS, type Language } from "@/lib/i18n";
+import { useTheme, THEME_LABELS, type Theme } from "@/lib/theme";
 
 /**
  * Settings — NEW screen added in Phase 4.
@@ -44,14 +45,6 @@ import { useLanguage, LANGUAGE_LABELS, type Language } from "@/lib/i18n";
  * 5. About — Version, licenses, privacy, logout
  */
 
-type Theme = "system" | "light" | "dark";
-
-const THEME_LABELS: Record<Theme, string> = {
-  system: "System",
-  light: "Light",
-  dark: "Dark",
-};
-
 interface SettingsBodyProps {
   deviceId: string;
 }
@@ -59,8 +52,8 @@ interface SettingsBodyProps {
 function SettingsBody({ deviceId }: SettingsBodyProps) {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const [budget, setBudget] = useState<Budget | null>(null);
-  const [theme, setTheme] = useState<Theme>("system");
   const [budgetAlertEnabled, setBudgetAlertEnabled] = useState(true);
   const [alertThreshold, setAlertThreshold] = useState(85);
   const [loading, setLoading] = useState(true);
@@ -84,23 +77,8 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
     })();
   }, []);
 
-  // Load theme preference from localStorage. Language is loaded by the
-  // shared useLanguage() hook itself.
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    if (savedTheme) setTheme(savedTheme);
-  }, []);
-
-  // Apply theme to document
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", prefersDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
-    }
-  }, [theme]);
+  // Theme and language are both loaded and applied by their shared hooks
+  // (useTheme, useLanguage) — no local state or effect needed here.
 
   const handleSaveNotificationSettings = async () => {
     setSaving(true);
@@ -404,23 +382,20 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 mb-2">{t("settings.display.theme")}</p>
             <div role="group" aria-label="Theme" className="flex flex-wrap gap-2 rounded-[var(--r-pill)] bg-white/50 p-1.5">
-              {(["system", "light", "dark"] as Theme[]).map((t) => (
+              {(["system", "light", "dark"] as Theme[]).map((th) => (
                 <button
-                  key={t}
+                  key={th}
                   type="button"
-                  onClick={() => {
-                    setTheme(t);
-                    localStorage.setItem("theme", t);
-                  }}
-                  aria-pressed={theme === t}
+                  onClick={() => setTheme(th)}
+                  aria-pressed={theme === th}
                   className={clsx(
                     "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
-                    theme === t
+                    theme === th
                       ? "bg-ink-panel text-on-dark shadow-sm"
                       : "text-ink-3 hover:text-ink",
                   )}
                 >
-                  {THEME_LABELS[t]}
+                  {THEME_LABELS[th]}
                 </button>
               ))}
             </div>
