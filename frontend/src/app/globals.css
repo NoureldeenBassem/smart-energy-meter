@@ -182,37 +182,43 @@
    rather than per-page — a page-by-page background would visibly reset on every
    navigation.
 
-   It is painted on a fixed pseudo-element rather than with
-   `background-attachment: fixed`, which iOS Safari ignores: it would rescale and
-   jump on every scroll, and an installed PWA is mostly viewed on a phone.
+   Painted directly on `body`'s own background, as a second image layer over
+   the gradient — not on a separate `::before` pseudo-element. A pseudo-
+   element needs its own paint/compositing layer (via `position: fixed` or
+   `position: absolute` + `z-index`), and on every page in this app that has
+   a `position: sticky` header (every authenticated page, via Shell.tsx),
+   Chromium can fail to repaint that layer above the sticky header once it
+   detaches from normal flow and sticks — the area the header used to occupy
+   renders as flat black (the compositor's empty-layer colour) instead of the
+   backdrop, until something else forces a repaint. It reproduces in both
+   light and dark mode and with both `fixed` and `absolute` positioning, so
+   the pseudo-element approach itself is the problem, not the position mode.
+   A background painted directly on `body` has no separate layer to go stale:
+   it is part of body's own paint, which the sticky header's own repaint
+   already invalidates correctly.
 
-   The gradient on `body` stays as the fallback colour beneath the SVG, so the
-   page is never white while the asset loads.
+   `background-attachment: fixed` (pinning the image to the viewport during
+   scroll) is deliberately not used: iOS Safari ignores it, rescaling and
+   jumping the image on every scroll, and an installed PWA is mostly viewed
+   on a phone. The image below scrolls with the page instead, which reads as
+   the same continuous atmosphere without that bug.
 --------------------------------------------------------------------------- */
 body {
   min-height: 100vh;
   color: var(--ink);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: linear-gradient(165deg, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
   background-image: url("/backdrop.svg");
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   background-repeat: no-repeat;
-  pointer-events: none;
+  background-color: var(--sky-2);
 }
 
 /* Dark mode gets its own backdrop asset (backdrop-dark.svg) — the light
    backdrop's pale blue hexagons over a bright base would clash badly laid
    over dark cards; the dark variant is the same geometry, retinted. */
-:root.dark body::before {
+:root.dark body {
   background-image: url("/backdrop-dark.svg");
 }
 
