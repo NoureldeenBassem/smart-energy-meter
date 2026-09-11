@@ -14,7 +14,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ArrowRight, FileText, Gauge, Target, TrendingUp } from "lucide-react";
+import { ArrowRight, FileText, Gauge, Target, TrendingUp, Activity } from "lucide-react";
 import { clsx } from "clsx";
 import Link from "next/link";
 
@@ -27,9 +27,11 @@ import {
   fetchDailyTelemetry,
   fetchPrediction,
   fetchTariffBrackets,
+  fetchNilmBreakdown,
   type DailyBucket,
   type Prediction,
   type TariffBracket,
+  type NilmBreakdown,
 } from "@/lib/api";
 
 /**
@@ -62,6 +64,7 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
   const [daily, setDaily] = useState<DailyBucket[]>([]);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [brackets, setBrackets] = useState<TariffBracket[]>([]);
+  const [nilm, setNilm] = useState<NilmBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,14 +72,16 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const [days, pred, br] = await Promise.allSettled([
+        const [days, pred, br, nl] = await Promise.allSettled([
           fetchDailyTelemetry(deviceId, 30),
           fetchPrediction(deviceId),
           fetchTariffBrackets(),
+          fetchNilmBreakdown(deviceId, 24),
         ]);
         if (days.status === "fulfilled") setDaily(days.value);
         if (pred.status === "fulfilled") setPrediction(pred.value);
         if (br.status === "fulfilled") setBrackets(br.value);
+        if (nl.status === "fulfilled") setNilm(nl.value);
         if (!cancelled) setLoading(false);
       } catch (err) {
         if (!cancelled) {
@@ -635,6 +640,67 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
             unit="EGP"
           />
         </div>
+      </Card>
+
+      {/* ============ NILM: appliance activity inferred from the single sensor ============ */}
+      <Card className="rise d7 p-5">
+        <SectionHeading
+          title="Appliance Activity"
+          subtitle={`Detected from the meter alone, last ${nilm ? Math.round((new Date(nilm.window_end).getTime() - new Date(nilm.window_start).getTime()) / 3600000) : 24}h`}
+        />
+        {!nilm ? (
+          <p className="mt-4 text-sm text-ink-3">No NILM data yet — needs at least one appliance ON/OFF transition in the window.</p>
+        ) : (
+          <>
+            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-2xl bg-white/60 p-3">
+                <p className="num text-xl font-bold text-ink">{nilm.matched_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Matched</p>
+              </div>
+              <div className="rounded-2xl bg-white/60 p-3">
+                <p className="num text-xl font-bold text-ink">{nilm.ambiguous_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Ambiguous</p>
+              </div>
+              <div className="rounded-2xl bg-white/60 p-3">
+                <p className="num text-xl font-bold text-ink">{nilm.unmatched_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Unmatched</p>
+              </div>
+            </div>
+            {nilm.appliances.filter((a) => a.on_events > 0).length === 0 ? (
+              <p className="mt-4 text-sm text-ink-3">
+                No appliance transitions detected yet in this window — an appliance already running when the window
+                started stays invisible until its next OFF/ON event; this is a known limitation, not an error.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {nilm.appliances
+                  .filter((a) => a.on_events > 0)
+                  .map((a) => (
+                    <div
+                      key={a.appliance_id}
+                      className="flex items-center justify-between rounded-2xl bg-white/60 px-4 py-3"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Activity className="h-4 w-4 text-accent-ink" aria-hidden />
+                        <div>
+                          <p className="text-sm font-semibold text-ink">{a.name}</p>
+                          <p className="text-[11px] text-ink-3">
+                            {a.on_events} event{a.on_events === 1 ? "" : "s"} · {a.estimated_runtime_hours.toFixed(2)} h
+                            {a.is_essential && " · essential"}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="num text-sm font-bold text-ink">{a.estimated_energy_kwh.toFixed(3)} kWh</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+            <p className="mt-3 text-[11px] text-ink-3">
+              Estimated from step changes in the aggregate power signal, matched against each appliance's registered
+              wattage — not a per-appliance sensor. See SUBMISSION_STATUS.md §4b.
+            </p>
+          </>
+        )}
       </Card>
     </div>
   );

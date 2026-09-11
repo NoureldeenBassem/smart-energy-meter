@@ -302,3 +302,34 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+// NILM (Non-Intrusive Load Monitoring)
+export interface NilmApplianceActivity {
+  appliance_id: string;
+  name: string;
+  is_essential: boolean;
+  on_events: number;
+  estimated_runtime_hours: number;
+  estimated_energy_kwh: number;
+}
+
+export interface NilmBreakdown {
+  window_start: string;
+  window_end: string;
+  sample_count: number;
+  total_events: number;
+  matched_events: number;
+  unmatched_events: number;
+  ambiguous_events: number;
+  appliances: NilmApplianceActivity[];
+}
+
+/**
+ * Event-based appliance disaggregation from the single aggregate sensor —
+ * see backend/app/services/nilm/ and SUBMISSION_STATUS.md §4b. `hours`
+ * controls the lookback window; the backend caps it at 168 (one week).
+ */
+export async function fetchNilmBreakdown(deviceId: string, hours = 24): Promise<NilmBreakdown> {
+  const res = await apiClient.get(`/nilm/breakdown/${deviceId}`, { params: { hours } });
+  return res.data;
+}
