@@ -1,6 +1,6 @@
 # Wattwise Smart Energy Meter — Complete Project Onboarding
 
-**Last updated: 2026-09-08**
+**Last updated: 2026-09-11**
 
 This document contains everything needed to understand the Wattwise project completely. Send this along with the repository when asking another AI to work on it.
 
@@ -18,8 +18,8 @@ This document contains everything needed to understand the Wattwise project comp
 | **Competition** | RoboDam 2026 |
 | **Track** | Intelligent Systems and AI (primary), IoT (supporting) |
 | **Repository** | https://github.com/NoureldeenBassem/smart-energy-meter (public) |
-| **Deadline** | 2026-09-09 (tomorrow) |
-| **Current Status** | Software complete, hardware en route (firmware written, not yet flashed) |
+| **Deadline** | Stated as 2026-09-09 during the 2026-09-08 planning session. **Today is 2026-09-11 — this needs confirming with the team**: passed, extended, or was "tomorrow" a different date? Not resolved in this repo. |
+| **Current Status** | Software complete, hardware en route (firmware written, not yet flashed). Poster and 14-slide presentation both built into their official templates. Competition video fully built and gated on branch `video/competition-2026`, waiting on the real Live Demo screen recording. |
 
 ---
 
@@ -163,21 +163,29 @@ The system runs on smartphones as a Progressive Web App (PWA), installs to the h
 - `README.md`: architecture, setup, model performance
 - `SUBMISSION_STATUS.md`: honest status of every component (what works, what's partial, what doesn't exist)
 - `PROJECT_MEMORY.md`: session context, key decisions, open questions
+- `ONBOARDING.md`: this file — the complete guide
 - `firmware/README.md`: wiring, flashing instructions, calibration guide, troubleshooting
-- Video plan document: 7 tasks, rulings, global constraints, honest narration
+- `docs/superpowers/plans/2026-09-08-competition-video.md`: the video's 7-task plan, rulings, global constraints
+- `video/RECORDING.md`: the exact shot list for the one remaining Live Demo recording
 - API docs: FastAPI `/docs` Swagger interface
 - Inline code comments: minimal, only where WHY is non-obvious
 
+**Competition deliverables — built, not just planned, as of 2026-09-11:**
+- **Poster**: all sections of the official RoboDam A0 template filled, 21 images embedded. Lives only on this machine (`Necessary Requirements/RoboDam 2026 Poster - Wattwise.pptx`), not committed to git.
+- **Presentation**: all 14 slides of `RoboDam_2026_Presentation_Template.pptx` filled and verified overflow-free by rendering every slide to an image and checking it (`Presentation/Wattwise Presentation.pptx`, also local-only). One manual step remains: Slide 5 needs a generated 4-icon workflow diagram pasted into a clearly marked placeholder box.
+- **Competition video**: the entire plan executed on branch `video/competition-2026` (12 commits). The build **refuses** to ship a placeholder Live Demo clip without an explicit override flag — see item 1 below.
+- **Pricing, corrected everywhere in the poster/deck**: 2,000 EGP device + **50 EGP/month** subscription (an earlier internal figure of 150 EGP/month was replaced at the team's request; if you see 150 EGP/month anywhere, it's stale).
+
 ### ⏳ Pending (Must Complete Before Submission)
 
-1. **Record the Live Demo clip** (~50 seconds of the running app):
+1. **Record the Live Demo clip** (~50 seconds of the running app) — this is the only missing piece in the video pipeline, which is otherwise fully built:
    - Open the dashboard, show live power readings updating
    - Navigate through pages (overview → budget → recommendations)
    - Follow the shot list in `video/RECORDING.md`
    - User records via Win+Alt+R (Windows Game Bar)
    - Run `demo.py <recording>` to normalize it to 50s / 1920×1080
    - Run `assemble.py` to build the final submission video
-   - **Without this, the video ships with a PLACEHOLDER CARD visible to judges**
+   - **Without this, `assemble.py` refuses to build the final MP4 at all** (not "ships a placeholder" — it hard-stops unless you pass `--allow-placeholder`, which is intentional)
 
 2. **Flash firmware to hardware** (when ESP32 + sensors arrive):
    - Follow `firmware/README.md` flashing section
@@ -573,6 +581,7 @@ Follow `firmware/README.md` § Flashing. The steps are:
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
+| **"Device not found" / "No recent readings" after a machine sleep or reboot** | The WSL-hosted Postgres data directory does not reliably survive a full WSL shutdown. `telemetry_raw` history usually survives, but the **`devices` row itself is frequently lost** — happened on 2026-09-09 and again 2026-09-10. | Re-register the device: `POST /api/v1/devices` with `{"external_id":"esp32_meter_01","device_label":"Main Energy Meter"}` (the UUID is deterministic from `external_id`, so old history reappears once the row exists again). Then rerun `python -m app.workers.aggregation_worker --once --all` and re-save the budget in the Budget page. Don't assume the historical data is gone — check `/telemetry/daily/<id>` first, it's usually still there. |
 | "No recent readings" on first login | Device not registered or simulator not running | Register device via /onboarding or run mock_esp32.py |
 | MQTT connection refused | Broker not running or wrong IP | Check WSL window is still running, verify broker IP in config.py |
 | Build fails with "Cannot find module" | venv not activated or not up to date | `.\venv\Scripts\Activate.ps1` then `pip install -r requirements.txt` |
@@ -652,7 +661,7 @@ Follow `firmware/README.md` § Flashing. The steps are:
 ## Competition Context
 
 ### RoboDam 2026
-- **Deadline**: 2026-09-09 (submission closes)
+- **Deadline**: stated as 2026-09-09 as of the 2026-09-08 planning session. Today is 2026-09-11 — **unresolved whether this has passed, been extended, or was misread**. Confirm with the team before treating any timeline in this doc as current.
 - **Venue**: TBD (likely Cairo)
 - **Tracks**: Intelligent Systems & AI (primary), IoT (supporting)
 - **Judging criteria**: Innovation, technical depth, real-world impact, presentation

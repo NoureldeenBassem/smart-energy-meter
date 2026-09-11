@@ -1,6 +1,6 @@
 # Project Memory — Smart Energy Meter (RoboDam 2026)
 
-_Last updated: 2026-09-07_
+_Last updated: 2026-09-11_
 
 > **New session? Read these four, in this order:**
 > 1. `ONBOARDING.md` — **COMPLETE PROJECT GUIDE** (start here if unfamiliar). Architecture, how to run it, every decision and why.
@@ -41,12 +41,65 @@ Competition track: **Intelligent Systems and AI** (primary), IoT (supporting).
 **Next up:** flash the firmware to the board. Before the ESP32 can reach the
 broker, port 1883 needs an inbound firewall rule and a portproxy from 0.0.0.0 to
 127.0.0.1 — both require an elevated PowerShell, which is the one step that could
-not be automated. The entry-form answers about hardware still need softening, and
-no backup demo video has been recorded. `design/DESIGN_BRIEF.md` is unused —
-decide whether the current design is the keeper before commissioning another.
+not be automated. `design/DESIGN_BRIEF.md` is unused — decide whether the
+current design is the keeper before commissioning another.
+
+**Competition deliverables, as of 2026-09-11:**
+- **Poster** — built directly into the official RoboDam A0 template (21 embedded
+  images, no text gaps). Lives only on this machine; not committed to git.
+- **Presentation** — all 14 slides of `RoboDam_2026_Presentation_Template.pptx`
+  filled and verified overflow-free (`Presentation/Wattwise Presentation.pptx`,
+  also local-only, not in git). One placeholder remains: Slide 5 needs the
+  user's Gemini-generated 4-icon workflow diagram pasted in by hand — the box
+  and the four stage labels are already placed correctly around it.
+- **Competition video** — the whole plan (7 tasks) was executed via
+  subagent-driven-development on branch `video/competition-2026` (12 commits,
+  `137d26f..c382128`). `assemble.py` **refuses** to produce the final MP4 from
+  placeholder footage without `--allow-placeholder`. The branch is **not merged
+  to master and not pushed** — still waiting on the user to record ~50s of the
+  live app per `video/RECORDING.md`.
+- **Pricing, corrected everywhere:** 2,000 EGP device + **50 EGP/month**
+  (an earlier 150 EGP/month figure was replaced at the user's request).
+
+**Operational note:** the WSL-hosted Postgres/Mosquitto stack does not reliably
+survive a machine sleep or WSL restart — see the 2026-09-10 entries below for
+the failure mode and the recovery steps. `start-wattwise.cmd` alone is not
+always enough after a long idle period; check device registration too.
 
 ## Key Decisions
 
+- **2026-09-09** — Presentation Slide 14 states a **NILM-based single-sensor
+  design** as a current capability, at the user's explicit, repeated
+  instruction. _Why this is flagged, not just stated:_ the recommendation
+  engine actually allocates budget using **user-registered appliance ratings**
+  (`rated_power_w`, typed in at onboarding), not a trained model that infers
+  per-appliance load from the single aggregate sensor signal — real NILM. This
+  was raised three times before writing it; the user took explicit
+  responsibility for including it as-is. Recorded here so a future session
+  doesn't "discover" the gap and silently rewrite it — the deck's wording was a
+  deliberate call, not an oversight, and any correction should go back through
+  the user first.
+- **2026-09-09** — The poster and the 14-slide presentation are built directly
+  into their official templates via `python-pptx` / OOXML editing, the same way
+  as earlier poster work, rather than handed over as prose for the user to
+  typeset themselves. _Why:_ matches established practice on this project, and
+  the automated build is what surfaced the shape-index bug below — a manual
+  hand-off would not have caught it.
+- **2026-09-09** — The video plan (`docs/superpowers/plans/2026-09-08-competition-video.md`)
+  was executed in full via subagent-driven-development, but the resulting
+  branch `video/competition-2026` was **kept separate from master**, not
+  merged. _Why:_ the branch's own build guard refuses to ship a placeholder
+  Live Demo clip, and the user has not yet recorded the real one — merging
+  unfinished, gated work to master serves no purpose until that clip exists.
+- **2026-09-10** — Recovery procedure for a cold WSL restart is: re-`POST
+  /api/v1/devices` with the same `external_id` (the UUID is deterministic, so
+  history keyed to it reappears once the device row exists again), rerun
+  `python -m app.workers.aggregation_worker --once --all`, then re-save the
+  budget. _Why documented:_ this has now happened twice (2026-09-09 and
+  2026-09-10) after the machine slept; `telemetry_raw` itself survives on the
+  WSL disk, but the `devices` row does not reliably survive, and the frontend
+  reports this as "Device not found" / "No recent readings" — easy to mistake
+  for a data-loss problem when it is really a one-row registration problem.
 - **2026-09-07** — Postgres and Mosquitto now run in **WSL Ubuntu, not Docker**.
   _Why:_ Docker Desktop on this machine recreates its socket files but never
   boots its WSL VM, so `\.\pipe\dockerDesktopLinuxEngine` never appears and
@@ -110,6 +163,10 @@ decide whether the current design is the keeper before commissioning another.
 
 ## Open Questions
 
+- **The submission deadline was stated as "tomorrow" during the 2026-09-08
+  session (i.e. 2026-09-09). Today is 2026-09-11.** Has the deadline passed,
+  was it extended, or was "tomorrow" a different date than assumed? This needs
+  the user to confirm directly — no evidence either way in this repo.
 - When does the hardware actually arrive, and is there time to calibrate before
   submission?
 - The entry-form answers still claim *"We built a device"* and *"we tested it
@@ -117,11 +174,36 @@ decide whether the current design is the keeper before commissioning another.
 - An outsourced design is being produced in another tool. When it lands, it must
   import from `src/lib/api.ts` rather than redefining types, and must not
   reimplement the tariff in TypeScript.
-- No backup demo video recorded yet, despite the plan document saying never to
-  demo live without one.
+- The video plan is fully built and gated; the only missing piece is the user's
+  ~50s screen recording of the live app (`video/RECORDING.md` has the shot
+  list). Once recorded: `demo.py <recording>` then `assemble.py`.
+- Branch `video/competition-2026` (12 commits) is unmerged, unpushed. Merge to
+  master and push once the real Live Demo clip lands, or keep it separate
+  longer? Not yet asked.
+- The Poster and Presentation `.pptx` files exist only on this machine, not in
+  the git repo. Intentional (large binary, template-derived), or should they be
+  committed too?
 
 ## Bugs Fixed
 
+- **2026-09-09** — The presentation-builder script (`python-pptx`) removed an
+  image-placeholder shape and then kept indexing later shapes on that same
+  slide by their **original position** — but removing a shape shifts every
+  later index down by one. On Slides 6, 7, and 14 this meant the intended text
+  ("Technology Stack", "Implementation", "Our Advantage") landed in the
+  **slide footer** instead, while the real target box silently kept its
+  unedited template placeholder text ("• Required technology", etc.). Caught
+  only by rendering every slide to a PNG and looking at it — the script ran
+  without error. _Fix:_ capture every shape reference for a slide into a
+  variable before removing any shape on that slide; never re-index by position
+  after a removal.
+- **2026-09-09** — Several presentation text boxes overflowed their rounded
+  card at the template's default font size — Slide 1's team-members line,
+  Slide 3's "Our Solution", Slide 9's top row, Slide 10's "Value Proposition",
+  all three columns of Slide 12, and Slide 14's "Our Advantage". _Fix:_ trimmed
+  wording and reduced font size per box, verified by re-rendering the deck
+  (LibreOffice → PDF → poppler → PNG) and visually checking each slide after
+  every change, not by assuming the fix worked.
 - **2026-08-26** — `ForecastGauge` drew the red arc the wrong way round the dial
   once the bill passed the halfway mark. `arcPath` set the SVG large-arc-flag
   with `to - from > 0.5`, but the flag selects the path LONGER than 180 degrees
