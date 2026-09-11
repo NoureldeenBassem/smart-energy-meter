@@ -68,6 +68,25 @@ always enough after a long idle period; check device registration too.
 
 ## Key Decisions
 
+- **2026-09-11** — **NILM is now genuinely implemented**, resolving the
+  2026-09-09 entry below. `backend/app/services/nilm/` runs real event-based
+  disaggregation (Hart's 1992 edge-detection method): step changes in the
+  aggregate power signal are matched against each registered appliance's
+  `rated_power_w` within a tolerance band, with ON/OFF state tracked per
+  appliance to compute estimated runtime and energy. New endpoint
+  `GET /api/v1/nilm/breakdown/{device_id}`. 11 unit tests
+  (`tests/test_nilm.py`), plus a live end-to-end check against the running
+  API: a synthetic 20-minute AC ON/OFF cycle was correctly detected with 0
+  unmatched and 0 ambiguous events, runtime and energy arithmetic exact.
+  _Why edge detection and not a learned model:_ needs no training data — no
+  Egyptian appliance dataset exists (same gap as the bill forecaster) — and
+  it works unchanged on real ESP32 sensor data the moment hardware exists,
+  since it only reads `telemetry_raw.power_w`. _Known, honest limitation:_ an
+  appliance already ON before the query window starts is invisible until its
+  next transition — it only sees ON/OFF events, not standing state — and two
+  appliances of near-identical wattage report as `ambiguous` rather than a
+  guessed match. The presentation's Slide 14 claim is therefore now accurate,
+  not just asserted.
 - **2026-09-09** — Presentation Slide 14 states a **NILM-based single-sensor
   design** as a current capability, at the user's explicit, repeated
   instruction. _Why this is flagged, not just stated:_ the recommendation

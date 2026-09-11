@@ -83,6 +83,7 @@ backend/
       tariff_engine/         Progressive Egypt tariff: kWh → EGP and EGP → kWh
       forecasting/           Bill prediction service
       recommendation/        Greedy budget-aware appliance allocator
+      nilm/                  Event-based load disaggregation (see below)
     workers/
       telemetry_worker.py    MQTT subscriber → telemetry_raw
       aggregation_worker.py  Hourly/daily rollups (local-day buckets)
@@ -242,6 +243,34 @@ gives +11.15% at the same range.
 
 Full caveats, including the selection pressure in that figure, are in
 [SUBMISSION_STATUS.md](SUBMISSION_STATUS.md).
+
+---
+
+## Non-Intrusive Load Monitoring (NILM)
+
+The app also infers per-appliance activity from the single aggregate current
+sensor, without a sensor on every appliance — `GET /api/v1/nilm/breakdown/{device_id}`.
+
+This uses event-based disaggregation (Hart's 1992 method, still the basis of
+most deployed NILM systems today): step changes in the aggregate power signal
+are matched against each registered appliance's `rated_power_w` within a
+tolerance band, with per-appliance ON/OFF state tracked to compute estimated
+runtime and energy. It needs no training data — no Egyptian per-appliance
+dataset exists (the same gap the bill forecaster has) — because it does not
+learn appliance signatures, it reads the wattage the household already typed
+in at onboarding and looks for steps of that size.
+
+**Honest limitations, by design, not oversight:**
+- An appliance already ON before the query window starts is invisible until
+  its *next* transition — the algorithm sees events, not standing state.
+- Two appliances of near-identical rated wattage cannot be told apart with
+  certainty; the endpoint reports these as `ambiguous_events` rather than
+  guessing which one switched.
+- A step no registered appliance's wattage explains (an unregistered load,
+  standby drift) is reported as `unmatched_events`, not discarded.
+
+Works unchanged on real ESP32 sensor data — it only reads `telemetry_raw.power_w`,
+the same field the simulator and the firmware both populate identically.
 
 ---
 

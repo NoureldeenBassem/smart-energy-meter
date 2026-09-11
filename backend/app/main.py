@@ -36,7 +36,7 @@ from sqlalchemy import text
 from app.core.database import Base, engine
 from app.models import models  # noqa: F401 — registers all models with Base
 
-from app.api.routes import auth, tariff, budgets, appliances, telemetry, devices, predictions
+from app.api.routes import auth, tariff, budgets, appliances, telemetry, devices, predictions, nilm
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,7 @@ app.include_router(appliances.router, prefix="/api/v1")
 app.include_router(telemetry.router, prefix="/api/v1")
 app.include_router(devices.router, prefix="/api/v1")
 app.include_router(predictions.router, prefix="/api/v1")
+app.include_router(nilm.router, prefix="/api/v1")
 
 
 @app.get("/health")

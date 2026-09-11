@@ -413,6 +413,66 @@ regression test.
 
 ---
 
+## 4b. NILM (appliance load disaggregation)
+
+### What is claimed
+
+`GET /api/v1/nilm/breakdown/{device_id}` infers per-appliance activity — which
+registered appliance is likely running, for how long, and how much energy it
+used — from the single aggregate current/voltage sensor alone, without a
+sensor on every appliance.
+
+### Status: working and verified
+
+Event-based disaggregation (Hart's 1992 edge-detection method, still the basis
+of most deployed NILM devices): step changes in the aggregate power signal are
+matched against each registered appliance's `rated_power_w` within a ±15%
+tolerance band, with per-appliance ON/OFF state tracked across the window to
+pair each RISE with its matching FALL and compute runtime/energy from the
+interval between them.
+
+`app/services/nilm/detector.py` and `matcher.py` are pure functions, unit
+tested directly against synthetic power traces (11 tests in
+`tests/test_nilm.py`) — a flat signal produces no edges, a single noisy spike
+that immediately reverts does not confirm as an edge, a FALL cannot match an
+appliance not currently believed ON, and two appliances of near-identical
+wattage resolve as ambiguous rather than a guessed match.
+
+Verified live, not only in unit tests: a synthetic 20-minute AC ON/OFF cycle
+was posted through the same `/telemetry` ingest endpoint the firmware/simulator
+use, against the real running API and real Postgres. Result: 2 matched events,
+0 unmatched, 0 ambiguous, runtime 0.35 h, energy 0.525 kWh — exact arithmetic
+match for a 1500 W load held for that interval.
+
+### Why edge detection, not a trained model
+
+A learned disaggregator needs thousands of hours of *labeled* per-appliance
+data — the same "no Egyptian household dataset exists" gap already documented
+for the bill forecaster in §1. Edge detection needs none: it reads the wattage
+the household already typed in at onboarding and looks for real physical steps
+of that size, which is true by definition of what "rated wattage" means, not
+something learned from examples.
+
+### Honest limitations
+
+- An appliance already ON before the query window starts is invisible until
+  its *next* transition — the algorithm sees events, not standing state. In
+  the live check above, the fridge (already running as the baseline) reported
+  zero events for exactly this reason — correct behaviour, not a bug.
+- Two appliances of near-identical rated wattage cannot be told apart with
+  certainty and are reported as ambiguous, not guessed.
+- A step no registered appliance's wattage explains (an unregistered load,
+  standby drift) is reported as unmatched, not silently discarded — and also
+  not silently attributed to whichever appliance happens to be closest.
+- Not yet exercised against real mains data with real appliances switching —
+  the live check above used synthetic telemetry posted through the real
+  ingest path, not a physical meter. The algorithm reads `telemetry_raw.power_w`
+  identically regardless of whether that value came from the simulator or the
+  firmware, so no code changes are anticipated when real hardware arrives, but
+  that claim itself is unverified until it happens.
+
+---
+
 ## 5. Schema and data integrity
 
 ### A real defect found: the live database was missing three declared tables

@@ -162,3 +162,23 @@ class DeviceLiveOut(BaseModel):
     today_energy_kwh: float
     month_energy_kwh: float
     reading_is_backfilled: Optional[bool]
+
+# NILM Schemas
+class ApplianceActivityOut(BaseModel):
+    appliance_id: UUID
+    name: str
+    is_essential: bool
+    on_events: int
+    estimated_runtime_hours: float
+    estimated_energy_kwh: float
+
+
+class NilmBreakdownOut(BaseModel):
+    window_start: datetime
+    window_end: datetime
+    sample_count: int
+    total_events: int
+    matched_events: int
+    unmatched_events: int    # step change no registered appliance's wattage explains
+    ambiguous_events: int    # step change more than one registered appliance could explain
+    appliances: List[ApplianceActivityOut]
