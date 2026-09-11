@@ -1,5 +1,7 @@
 "use client";
 
+import { useIsDark } from "@/lib/theme";
+
 /**
  * Half-circle forecast gauge — predicted bill against the budget target.
  *
@@ -45,6 +47,8 @@ export default function ForecastGauge({
   targetEgp: number | null;
   stale?: boolean;
 }) {
+  const isDark = useIsDark();
+  const labelColour = isDark ? "#9aa5b4" : "#5c6673";
   const hasScale = targetEgp !== null && targetEgp > 0;
 
   // Full scale is 1.4x the target, so the target sits at ~71% of the dial and
@@ -132,10 +136,10 @@ export default function ForecastGauge({
           )}
 
           {/* endpoint labels */}
-          <text x={CX - R} y={CY + 24} textAnchor="middle" fill="#5c6673" style={{ fontSize: 11, fontWeight: 600 }}>
+          <text x={CX - R} y={CY + 24} textAnchor="middle" fill={labelColour} style={{ fontSize: 11, fontWeight: 600 }}>
             0
           </text>
-          <text x={CX + R} y={CY + 24} textAnchor="middle" fill="#5c6673" style={{ fontSize: 11, fontWeight: 600 }}>
+          <text x={CX + R} y={CY + 24} textAnchor="middle" fill={labelColour} style={{ fontSize: 11, fontWeight: 600 }}>
             {fullScale ? fullScale.toFixed(0) : "--"}
           </text>
         </svg>

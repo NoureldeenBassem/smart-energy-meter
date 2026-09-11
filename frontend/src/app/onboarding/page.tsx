@@ -93,7 +93,7 @@ export default function OnboardingPage() {
           {step === "not_found" && (
             <>
               <span className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-white/50 rise d2">
-                <XCircle className="h-9 w-9 text-ink-3" aria-hidden />
+                <XCircle className="h-9 w-9 text-chip-text-2" aria-hidden />
               </span>
               <h1 className="text-xl font-bold tracking-tight text-ink rise d3">
                 No recent readings

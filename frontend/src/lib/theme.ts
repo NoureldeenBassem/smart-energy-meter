@@ -88,3 +88,26 @@ export function applyStoredTheme() {
   const saved = (typeof window !== "undefined" ? (localStorage.getItem(THEME_STORAGE_KEY) as Theme | null) : null) ?? "system";
   applyTheme(saved);
 }
+
+/**
+ * For the rare component that cannot just use a CSS token — e.g. a chart
+ * library (recharts) that takes color as a literal JS string prop (`fill`,
+ * `stroke`), not a class, so it cannot read --ink/--chip-text/etc. at all.
+ * UsageBars.tsx is the first user: its bar-gradient and axis-label colors
+ * were hardcoded light-mode hex values that read as near-invisible bars on
+ * a dark card. This hook gives such a component a plain boolean to branch
+ * its own hardcoded palette on, kept in sync with useTheme()'s class toggle.
+ */
+export function useIsDark(): boolean {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const read = () => setIsDark(document.documentElement.classList.contains("dark"));
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}

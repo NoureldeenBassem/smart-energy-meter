@@ -33,6 +33,7 @@ import {
   type TariffBracket,
   type NilmBreakdown,
 } from "@/lib/api";
+import { useIsDark } from "@/lib/theme";
 
 /**
  * Insights — NEW screen added in Phase 4.
@@ -61,6 +62,7 @@ interface BracketPoint {
 }
 
 function InsightsBody({ deviceId }: { deviceId: string }) {
+  const isDark = useIsDark();
   const [daily, setDaily] = useState<DailyBucket[]>([]);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [brackets, setBrackets] = useState<TariffBracket[]>([]);
@@ -190,6 +192,23 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayIndex = daily.findIndex((d) => d.bucket_start === todayStr);
 
+  // Recharts takes color/background as literal props, not classes, so these
+  // hardcoded values (tuned for a light card) were reading as near-invisible
+  // axis text and a jarring bright-white tooltip on a dark card — same class
+  // of bug as UsageBars.tsx, same fix: branch on the same dark-mode signal.
+  const chartAxisColor = isDark ? "#9aa5b4" : "#5c6673";
+  const chartAxisColorStrong = isDark ? "#c7cdd6" : "#3d4650";
+  const chartGridColor = isDark ? "#ffffff1a" : "#ffffff40";
+  const chartBarColor = isDark ? "#c7cdd6" : "#2b2f37";
+  const chartTooltipStyle = {
+    backgroundColor: isDark ? "rgba(43,47,55,0.95)" : "rgba(255,255,255,0.95)",
+    border: isDark ? "1px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.6)",
+    borderRadius: "12px",
+    boxShadow: isDark ? "0 8px 32px -8px rgba(0,0,0,0.55)" : "0 8px 32px -8px rgba(30,41,59,0.28)",
+    backdropFilter: "blur(16px)",
+    color: isDark ? "#f1f4f8" : "#21262d",
+  };
+
   return (
     <div className="space-y-4">
       {/* ============ HERO: Weekly Trend ============ */}
@@ -228,28 +247,22 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                     <stop offset="100%" stopColor="#e3ec4a" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 10, fill: "#5c6673" }}
+                  tick={{ fontSize: 10, fill: chartAxisColor }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 10, fill: "#5c6673" }}
+                  tick={{ fontSize: 10, fill: chartAxisColor }}
                   width={42}
                   tickFormatter={(v) => `${v}kWh`}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(255,255,255,0.95)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -8px rgba(30,41,59,0.28)",
-                    backdropFilter: "blur(16px)",
-                  }}
+                  contentStyle={chartTooltipStyle}
                   formatter={(v) => [`${Number(v).toFixed(2)} kWh`, "Energy"]}
                 />
                 <Area
@@ -319,8 +332,8 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
               >
                 <defs>
                   <linearGradient id="tp-used" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2b2f37" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#2b2f37" stopOpacity={0.4} />
+                    <stop offset="0%" stopColor={chartBarColor} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={chartBarColor} stopOpacity={0.4} />
                   </linearGradient>
                   <linearGradient id="tp-active" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#e3ec4a" stopOpacity={1} />
@@ -331,12 +344,12 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                     <stop offset="100%" stopColor="#8698b4" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} horizontal={false} />
                 <XAxis
                   type="number"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 10, fill: "#5c6673" }}
+                  tick={{ fontSize: 10, fill: chartAxisColor }}
                   tickFormatter={(v) => `${v}kWh`}
                 />
                 <YAxis
@@ -344,19 +357,13 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                   type="category"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: "#3d4650", fontWeight: 600 }}
+                  tick={{ fontSize: 11, fill: chartAxisColorStrong, fontWeight: 600 }}
                   width={36}
                   interval={0}
                   reversed
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(255,255,255,0.95)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -8px rgba(30,41,59,0.28)",
-                    backdropFilter: "blur(16px)",
-                  }}
+                  contentStyle={chartTooltipStyle}
                   formatter={(v, name) =>
                     name === "used"
                       ? [`${Number(v).toFixed(2)} kWh used`, "Used"]
@@ -366,7 +373,7 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                   }
                 />
                 <Legend
-                  wrapperStyle={{ paddingTop: 8 }}
+                  wrapperStyle={{ paddingTop: 8, color: chartAxisColorStrong }}
                   formatter={(value: string) => [
                     value === "used" ? "Consumed" : value === "capacity" ? "Bracket capacity" : "Rate",
                   ]}
@@ -582,7 +589,7 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                     )}
                     title={`${d.day}: ${d.kwh.toFixed(2)} kWh`}
                   >
-                    <span className="absolute bottom-1 right-1 text-[9px] font-bold text-ink-2">
+                    <span className="absolute bottom-1 right-1 text-[9px] font-bold text-chip-text">
                       {d.kwh.toFixed(1)}
                     </span>
                   </div>
@@ -654,16 +661,16 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
           <>
             <div className="mt-4 grid grid-cols-3 gap-3 text-center">
               <div className="rounded-2xl bg-white/60 p-3">
-                <p className="num text-xl font-bold text-ink">{nilm.matched_events}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Matched</p>
+                <p className="num text-xl font-bold text-chip-text">{nilm.matched_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chip-text-2">Matched</p>
               </div>
               <div className="rounded-2xl bg-white/60 p-3">
-                <p className="num text-xl font-bold text-ink">{nilm.ambiguous_events}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Ambiguous</p>
+                <p className="num text-xl font-bold text-chip-text">{nilm.ambiguous_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chip-text-2">Ambiguous</p>
               </div>
               <div className="rounded-2xl bg-white/60 p-3">
-                <p className="num text-xl font-bold text-ink">{nilm.unmatched_events}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Unmatched</p>
+                <p className="num text-xl font-bold text-chip-text">{nilm.unmatched_events}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chip-text-2">Unmatched</p>
               </div>
             </div>
             {nilm.appliances.filter((a) => a.on_events > 0).length === 0 ? (
@@ -683,14 +690,14 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
                       <div className="flex items-center gap-2.5">
                         <Activity className="h-4 w-4 text-accent-ink" aria-hidden />
                         <div>
-                          <p className="text-sm font-semibold text-ink">{a.name}</p>
-                          <p className="text-[11px] text-ink-3">
+                          <p className="text-sm font-semibold text-chip-text">{a.name}</p>
+                          <p className="text-[11px] text-chip-text-2">
                             {a.on_events} event{a.on_events === 1 ? "" : "s"} · {a.estimated_runtime_hours.toFixed(2)} h
                             {a.is_essential && " · essential"}
                           </p>
                         </div>
                       </div>
-                      <p className="num text-sm font-bold text-ink">{a.estimated_energy_kwh.toFixed(3)} kWh</p>
+                      <p className="num text-sm font-bold text-chip-text">{a.estimated_energy_kwh.toFixed(3)} kWh</p>
                     </div>
                   ))}
               </div>

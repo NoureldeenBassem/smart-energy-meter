@@ -3,6 +3,7 @@
 import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 import type { DailyBucket } from "@/lib/api";
+import { useIsDark } from "@/lib/theme";
 
 /**
  * Daily energy usage — the reference's bar chart.
@@ -28,6 +29,8 @@ export default function UsageBars({
   dailyAllowanceKwh: number | null;
   windowDays?: number;
 }) {
+  const isDark = useIsDark();
+
   if (days.length === 0) {
     return (
       <div className="flex h-[250px] items-center justify-center px-6 pb-6">
@@ -44,14 +47,24 @@ export default function UsageBars({
   }));
   const todayIndex = data.length - 1;
 
+  // Recharts takes color as a literal prop, not a class, so it cannot read
+  // the --ink/--warn CSS tokens the rest of the app uses. #2b2f37 (dark
+  // charcoal) as the bar color and #5c6673 for axis text were tuned for a
+  // light card and read as near-invisible on a dark one — this branches the
+  // same three colors on the same dark-mode signal every other component
+  // reads from CSS, just resolved in JS since that is what recharts needs.
+  const barColor = isDark ? "#c7cdd6" : "#2b2f37";
+  const axisColor = isDark ? "#9aa5b4" : "#5c6673";
+  const allowanceColor = isDark ? "#ff7a7e" : "#b32a2f";
+
   return (
     <div className="px-2 pb-4">
       <ResponsiveContainer width="100%" height={252}>
         <BarChart data={data} margin={{ top: 16, right: 14, left: -16, bottom: 4 }}>
           <defs>
             <linearGradient id="ub-bar" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2b2f37" stopOpacity={0.92} />
-              <stop offset="100%" stopColor="#2b2f37" stopOpacity={0.16} />
+              <stop offset="0%" stopColor={barColor} stopOpacity={0.92} />
+              <stop offset="100%" stopColor={barColor} stopOpacity={0.16} />
             </linearGradient>
             <linearGradient id="ub-today" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#e3ec4a" stopOpacity={1} />
@@ -63,28 +76,28 @@ export default function UsageBars({
             dataKey="label"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 10, fill: "#5c6673" }}
+            tick={{ fontSize: 10, fill: axisColor }}
             interval="preserveStartEnd"
             minTickGap={10}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 10, fill: "#5c6673" }}
+            tick={{ fontSize: 10, fill: axisColor }}
             width={42}
           />
 
           {dailyAllowanceKwh !== null && dailyAllowanceKwh > 0 && (
             <ReferenceLine
               y={dailyAllowanceKwh}
-              stroke="#b32a2f"
+              stroke={allowanceColor}
               strokeDasharray="5 5"
               strokeWidth={1.3}
               strokeOpacity={0.8}
               label={{
                 value: `daily allowance ${dailyAllowanceKwh.toFixed(1)} kWh`,
                 position: "insideTopRight",
-                fill: "#b32a2f",
+                fill: allowanceColor,
                 fontSize: 10,
                 fontWeight: 600,
               }}

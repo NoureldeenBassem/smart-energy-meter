@@ -475,12 +475,12 @@ function ApplianceRow({ a }: { a: Allocation }) {
         <Icon className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-[13px] font-bold text-ink">
+        <p className="flex items-center gap-1.5 truncate text-[13px] font-bold text-chip-text">
           {a.is_essential && <Lock className="h-3 w-3 shrink-0 text-accent-ink" aria-label="Essential" />}
           {a.name}{" "}
-          <span className="num font-semibold text-ink-3">({a.recommended_runtime_hours}h/day)</span>
+          <span className="num font-semibold text-chip-text-2">({a.recommended_runtime_hours}h/day)</span>
         </p>
-        <p className="num mt-0.5 text-[11px] text-ink-3">{a.estimated_kwh.toFixed(2)} kWh</p>
+        <p className="num mt-0.5 text-[11px] text-chip-text-2">{a.estimated_kwh.toFixed(2)} kWh</p>
       </div>
       <span className={clsx("shrink-0 rounded-[var(--r-pill)] px-2.5 py-1 text-[10px] font-bold", badge.cls)}>
         {badge.text}

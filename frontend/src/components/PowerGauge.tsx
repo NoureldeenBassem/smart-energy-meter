@@ -1,5 +1,7 @@
 "use client";
 
+import { useIsDark } from "@/lib/theme";
+
 /**
  * Live power gauge - a 270-degree SVG arc with ticks and a needle.
  *
@@ -64,9 +66,17 @@ export default function PowerGauge({
   scaleNote?: string;
   stale?: boolean;
 }) {
+  const isDark = useIsDark();
   const value = typeof watts === "number" && Number.isFinite(watts) ? watts : null;
   const fraction =
     value === null ? 0 : Math.min(Math.max(value / fullScaleWatts, 0), 1);
+
+  // Track/tick strokes are literal SVG props, not classes, so they cannot
+  // read the --ink tokens the number/label text below already uses
+  // correctly. Tuned for the light-mode glass card, they read as nearly
+  // invisible against the same card in dark mode.
+  const trackColour = isDark ? "#4a5568" : "#3a404a";
+  const tickColour = isDark ? "#5a6478" : "#4a515c";
 
   // On the CHARCOAL panel. Against #2b2f37 the brand accent runs ~11:1, so the
   // value arc carries the real yellow rather than the deep olive a white card
@@ -108,7 +118,7 @@ export default function PowerGauge({
               y1={ty1}
               x2={tx2}
               y2={ty2}
-              stroke="#4a515c"
+              stroke={tickColour}
               strokeWidth={2}
               strokeLinecap="round"
             />
@@ -119,7 +129,7 @@ export default function PowerGauge({
         <path
           d={ARC_PATH}
           fill="none"
-          stroke="#3a404a"
+          stroke={trackColour}
           strokeWidth={13}
           strokeLinecap="round"
         />

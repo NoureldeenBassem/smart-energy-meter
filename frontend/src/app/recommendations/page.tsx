@@ -166,7 +166,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
                 "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
                 mode === m
                   ? "bg-ink-panel text-on-dark shadow-sm"
-                  : "text-ink-3 hover:text-ink",
+                  : "text-chip-text-2 hover:text-chip-text",
               )}
             >
               {MODE_LABELS[m]}
