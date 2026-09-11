@@ -64,7 +64,7 @@ const STATUS_STYLES: Record<
   },
   optimal: {
     label: "Full runtime",
-    chip: "bg-white/50 text-ink-2 border-white/60",
+    chip: "bg-white/50 text-chip-text border-white/60",
     icon: <CheckCircle2 className="h-3 w-3" aria-hidden />,
   },
   constrained: {
@@ -79,7 +79,7 @@ const STATUS_STYLES: Record<
   },
   away: {
     label: "Off (away)",
-    chip: "bg-white/50 text-ink-3 border-white/60",
+    chip: "bg-white/50 text-chip-text-2 border-white/60",
     icon: <Moon className="h-3 w-3" aria-hidden />,
   },
 };
@@ -283,7 +283,7 @@ function RecommendationsBody({ deviceId }: { deviceId: string }) {
               <Power className="h-4 w-4 text-ink-3" aria-hidden />
               Adjustable
               {discretionary.length > 0 && (
-                <span className="num rounded-[var(--r-pill)] bg-white/50 px-2 py-0.5 text-[11px] font-bold text-ink-3">
+                <span className="num rounded-[var(--r-pill)] bg-white/50 px-2 py-0.5 text-[11px] font-bold text-chip-text-2">
                   {discretionary.length}
                 </span>
               )}

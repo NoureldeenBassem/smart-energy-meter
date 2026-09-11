@@ -182,7 +182,7 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
               {allowance && (
                 <>
                   {/* Round trip verification */}
-                  <p className="mt-5 flex items-start gap-2 rounded-xl bg-white/50 p-3 text-xs leading-relaxed text-ink-3">
+                  <p className="mt-5 flex items-start gap-2 rounded-xl bg-white/50 p-3 text-xs leading-relaxed text-chip-text-2">
                     <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-ink" aria-hidden />
                     <span>
                       Charging {allowance.allowed_kwh.toFixed(3)} kWh through the tariff
@@ -315,7 +315,7 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                 setSavedMessage(null);
               }}
               placeholder="800"
-              className="num w-full rounded-xl border border-white/60 bg-white/50 px-4 py-3.5 text-3xl font-bold text-ink outline-none transition placeholder:text-ink-3/50 focus:border-accent-2"
+              className="num w-full rounded-xl border border-white/60 bg-white/50 px-4 py-3.5 text-3xl font-bold text-chip-text outline-none transition placeholder:text-chip-text-2/50 focus:border-accent-2"
             />
             <span className="text-sm font-bold text-ink-3">EGP</span>
           </div>
@@ -336,7 +336,7 @@ function BudgetBody({ deviceId }: { deviceId: string }) {
                   className={`num flex-1 rounded-[var(--r-pill)] py-2 text-sm font-bold transition ${
                     threshold === t
                       ? "bg-ink-panel text-on-dark"
-                      : "bg-white/50 text-ink-3 hover:text-ink"
+                      : "bg-white/50 text-chip-text-2 hover:text-chip-text"
                   }`}
                 >
                   {t}%

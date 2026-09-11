@@ -29,6 +29,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
   apiErrorMessage,
   fetchActiveBudget,
+  fetchCurrentUserEmail,
   type Budget,
 } from "@/lib/api";
 import { useLanguage, LANGUAGE_LABELS, type Language } from "@/lib/i18n";
@@ -60,6 +61,23 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(() => localStorage.getItem("user_email"));
+
+  // Self-heal a session that logged in before the auth page started saving
+  // user_email — fetch it once from the server and backfill localStorage so
+  // this only ever runs the one time per such session, not on every visit.
+  useEffect(() => {
+    if (email) return;
+    (async () => {
+      try {
+        const real = await fetchCurrentUserEmail();
+        localStorage.setItem("user_email", real);
+        setEmail(real);
+      } catch {
+        // Not fatal — the UI falls back to a placeholder below.
+      }
+    })();
+  }, [email]);
 
   // Load budget for alert threshold
   useEffect(() => {
@@ -148,7 +166,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
     );
   }
 
-  const savedEmail = localStorage.getItem("user_email") ?? "user@example.com";
+  const savedEmail = email ?? "—";
 
   return (
     <div className="space-y-4">
@@ -187,7 +205,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
+              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-chip-text-2 transition hover:bg-white/70 hover:text-chip-text"
             >
               {t("settings.profile.change")}
             </button>
@@ -199,7 +217,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
+              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-chip-text-2 transition hover:bg-white/70 hover:text-chip-text"
             >
               {t("settings.profile.update")}
             </button>
@@ -231,7 +249,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
+              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-chip-text-2 transition hover:bg-white/70 hover:text-chip-text"
             >
               {t("settings.device.rename")}
             </button>
@@ -243,7 +261,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-ink-3 transition hover:bg-white/70 hover:text-ink"
+              className="shrink-0 rounded-[var(--r-pill)] bg-white/50 px-3.5 py-1.5 text-sm font-semibold text-chip-text-2 transition hover:bg-white/70 hover:text-chip-text"
             >
               <RotateCcw className="h-3.5 w-3.5 inline mr-1.5" /> {t("settings.device.repairAction")}
             </button>
@@ -325,7 +343,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                       "num flex-1 rounded-[var(--r-pill)] py-2 text-sm font-bold transition",
                       alertThreshold === t
                         ? "bg-ink-panel text-on-dark"
-                        : "bg-white/50 text-ink-3 hover:text-ink",
+                        : "bg-white/50 text-chip-text-2 hover:text-chip-text",
                     )}
                   >
                     {t}%
@@ -359,14 +377,14 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
             <div className="flex items-center justify-between gap-4 opacity-50">
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-white/50">
-                  <Bell className="h-5 w-5 text-ink-3" aria-hidden />
+                  <Bell className="h-5 w-5 text-chip-text-2" aria-hidden />
                 </span>
                 <div>
                   <p className="font-semibold text-ink">{t("settings.notifications.push")}</p>
                   <p className="text-sm text-ink-3">{t("settings.notifications.soon")}</p>
                 </div>
               </div>
-              <span className="shrink-0 rounded-[var(--r-pill)] bg-white/30 px-2.5 py-1 text-[10px] font-bold text-ink-3">
+              <span className="shrink-0 rounded-[var(--r-pill)] bg-white/30 px-2.5 py-1 text-[10px] font-bold text-chip-text-2">
                 {t("settings.notifications.soon")}
               </span>
             </div>
@@ -392,7 +410,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                     "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
                     theme === th
                       ? "bg-ink-panel text-on-dark shadow-sm"
-                      : "text-ink-3 hover:text-ink",
+                      : "text-chip-text-2 hover:text-chip-text",
                   )}
                 >
                   {THEME_LABELS[th]}
@@ -416,7 +434,7 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                     "flex-1 whitespace-nowrap rounded-[var(--r-pill)] px-4 py-2 text-sm font-semibold transition",
                     language === l
                       ? "bg-ink-panel text-on-dark shadow-sm"
-                      : "text-ink-3 hover:text-ink",
+                      : "text-chip-text-2 hover:text-chip-text",
                   )}
                 >
                   {LANGUAGE_LABELS[l]}
@@ -455,35 +473,35 @@ function SettingsBody({ deviceId }: SettingsBodyProps) {
                 <Target className="h-5 w-5 text-accent-ink" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-ink">Version</p>
-                <p className="text-sm text-ink-3">1.0.0 (Phase 4)</p>
+                <p className="font-semibold text-chip-text">Version</p>
+                <p className="text-sm text-chip-text-2">1.0.0 (Phase 4)</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70">
-                <Gauge className="h-5 w-5 text-ink-3" aria-hidden />
+                <Gauge className="h-5 w-5 text-chip-text-2" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-ink">Tariff Engine</p>
-                <p className="text-sm text-ink-3">7-bracket progressive</p>
+                <p className="font-semibold text-chip-text">Tariff Engine</p>
+                <p className="text-sm text-chip-text-2">7-bracket progressive</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70">
-                <TrendingUp className="h-5 w-5 text-ink-3" aria-hidden />
+                <TrendingUp className="h-5 w-5 text-chip-text-2" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-ink">Forecast Model</p>
-                <p className="text-sm text-ink-3">LightGBM + residual</p>
+                <p className="font-semibold text-chip-text">Forecast Model</p>
+                <p className="text-sm text-chip-text-2">LightGBM + residual</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70">
-                <Mail className="h-5 w-5 text-ink-3" aria-hidden />
+                <Mail className="h-5 w-5 text-chip-text-2" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-ink">Support</p>
-                <p className="text-sm text-ink-3">noureldinbassem.work@gmail.com</p>
+                <p className="font-semibold text-chip-text">Support</p>
+                <p className="text-sm text-chip-text-2">noureldinbassem.work@gmail.com</p>
               </div>
             </div>
           </div>

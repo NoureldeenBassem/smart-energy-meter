@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 
 import Logo from "@/components/Logo";
 import { registerUser, loginUser } from "@/lib/api";
+import { useTheme } from "@/lib/theme";
 
 /**
  * Sign-in / sign-up.
@@ -20,6 +21,7 @@ import { registerUser, loginUser } from "@/lib/api";
  */
 export default function AuthPage() {
   const router = useRouter();
+  useTheme(); // Shell only wraps authenticated pages, so /auth needs its own call to respect a saved dark-mode preference before login
   const [mode, setMode] = useState<"login" | "register">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,7 +91,7 @@ export default function AuthPage() {
                       "flex-1 rounded-[var(--r-pill)] py-2 text-sm font-semibold transition",
                       mode === m
                         ? "bg-ink-panel text-on-dark shadow-sm"
-                        : "text-ink-3 hover:text-ink",
+                        : "text-chip-text-2 hover:text-chip-text",
                     )}
                   >
                     {m === "register" ? "Sign Up" : "Log In"}
@@ -112,7 +114,7 @@ export default function AuthPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-2"
+                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-chip-text outline-none transition focus:border-accent-2"
                   />
                 </div>
                 <div>
@@ -132,7 +134,7 @@ export default function AuthPage() {
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-accent-2"
+                    className="mt-1.5 w-full rounded-xl border border-white/60 bg-white/50 px-3.5 py-2.5 text-sm text-chip-text outline-none transition focus:border-accent-2"
                   />
                   <p className="mt-1 text-[11px] text-ink-3">
                     At least 8 characters.

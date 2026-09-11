@@ -16,6 +16,10 @@ class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+class UserOut(BaseModel):
+    user_id: UUID
+    email: EmailStr
+
 # Appliance Schemas
 class ApplianceCreate(BaseModel):
     name: str

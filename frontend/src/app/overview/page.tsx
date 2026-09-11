@@ -175,7 +175,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
             <Link
               href="/recommendations"
               aria-label="Open today's plan"
-              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
             >
               <ArrowUpRight className="h-4 w-4" aria-hidden />
             </Link>
@@ -294,7 +294,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
             title="Energy Usage (kWh)"
             hint="Daily totals this cycle"
             action={
-              <span className="rounded-[var(--r-pill)] bg-white/55 px-3.5 py-1.5 text-[11px] font-semibold text-ink-2">
+              <span className="rounded-[var(--r-pill)] bg-white/55 px-3.5 py-1.5 text-[11px] font-semibold text-chip-text">
                 Last 14 days
               </span>
             }
@@ -316,7 +316,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                 <Link
                   href="/budget"
                   aria-label="Open the budget planner"
-                  className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
                 >
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                 </Link>
@@ -371,7 +371,7 @@ function OverviewBody({ deviceId }: { deviceId: string }) {
                 <Link
                   href="/recommendations"
                   aria-label="Open the full plan"
-                  className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
                 >
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                 </Link>
@@ -462,7 +462,7 @@ function ApplianceRow({ a }: { a: Allocation }) {
       ? { text: "skip today", cls: "bg-warn-wash text-warn" }
       : a.status === "constrained"
         ? { text: "reduced", cls: "bg-accent-wash text-accent-ink" }
-        : { text: a.priority.toLowerCase(), cls: "bg-white/70 text-ink-3" };
+        : { text: a.priority.toLowerCase(), cls: "bg-white/70 text-chip-text-2" };
 
   return (
     <li
@@ -471,7 +471,7 @@ function ApplianceRow({ a }: { a: Allocation }) {
         a.is_essential ? "border-l-[3px] border-accent-2 bg-white/60" : "bg-white/45",
       )}
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/80 text-ink-2">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/80 text-chip-text">
         <Icon className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">

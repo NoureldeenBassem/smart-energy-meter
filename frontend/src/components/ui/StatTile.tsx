@@ -45,7 +45,7 @@ export function StatTile({
           <Link
             href={href}
             aria-label={hrefLabel ?? `Open ${label}`}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
           >
             <ArrowUpRight className="h-4 w-4" aria-hidden />
           </Link>

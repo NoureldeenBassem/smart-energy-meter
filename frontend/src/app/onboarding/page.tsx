@@ -6,6 +6,7 @@ import { Zap, Wifi, CheckCircle2, XCircle } from "lucide-react";
 
 import Logo from "@/components/Logo";
 import { registerDevice, waitForDeviceOnline } from "@/lib/device";
+import { useTheme } from "@/lib/theme";
 
 /**
  * Device pairing.
@@ -23,6 +24,7 @@ type Step = "intro" | "searching" | "found" | "not_found";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  useTheme(); // between login and Shell mounting — same gap as /auth
   const [step, setStep] = useState<Step>("intro");
 
   const handleConnect = async () => {

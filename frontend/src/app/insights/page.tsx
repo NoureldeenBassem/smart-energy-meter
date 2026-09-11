@@ -201,7 +201,7 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
             <Link
               href="/overview"
               aria-label="View full 14-day chart"
-              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
             >
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
@@ -299,7 +299,7 @@ function InsightsBody({ deviceId }: { deviceId: string }) {
             <Link
               href="/budget"
               aria-label="Open budget planner"
-              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-ink-3 transition hover:bg-ink-panel hover:text-accent"
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-chip-text-2 transition hover:bg-ink-panel hover:text-accent"
             >
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>

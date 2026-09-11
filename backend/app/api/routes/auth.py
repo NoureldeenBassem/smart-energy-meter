@@ -11,7 +11,7 @@ from app.models.models import Appliance
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user_id
 from app.models.models import User
-from app.api.schemas import UserCreate, UserLogin, TokenOut
+from app.api.schemas import UserCreate, UserLogin, TokenOut, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -75,6 +75,27 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
     token = create_access_token({"sub": str(user.user_id)})
     return TokenOut(access_token=token)
+
+
+@router.get("/me", response_model=UserOut)
+def get_current_user(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Returns the current user's own record. Added alongside DELETE /me so the
+    frontend can self-heal a session that logged in before Settings started
+    persisting the email locally — a session created before that fix has
+    localStorage["user_email"] permanently missing, and re-registering isn't
+    something you can ask a user to do just to see their own email. Settings
+    now calls this once as a fallback when the local copy is absent, and
+    backfills it, instead of showing the "user@example.com" placeholder
+    forever for every account that logged in before the fix landed.
+    """
+    user = db.query(User).filter(User.user_id == UUID(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)

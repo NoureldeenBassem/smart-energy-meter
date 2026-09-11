@@ -41,6 +41,18 @@
   --on-dark: #f1f4f8;
   --on-dark-2: #9aa5b4;
 
+  /* chip text — deliberately NOT overridden in :root.dark below.
+     A handful of elements (Settings' secondary buttons, the theme/language/
+     units pill groups, the About cards) sit on a `bg-white/NN` chip rather
+     than the main card glass. That chip is a literal white-alpha blend, so
+     it stays light-toned in EITHER theme — it does not flip dark. Text on
+     it must therefore stay dark-toned in EITHER theme too. Pairing it with
+     --ink/--ink-3 (which correctly flip to near-white in dark mode, for text
+     on the CARD itself) put light text on a light chip in dark mode —
+     illegible. This is the fix. */
+  --chip-text: #21262d;
+  --chip-text-2: #5c6673;
+
   /* accent */
   --accent: #e3ec4a;
   --accent-2: #cbd42f;
@@ -149,6 +161,8 @@
   --color-ink-3: var(--ink-3);
   --color-on-dark: var(--on-dark);
   --color-on-dark-2: var(--on-dark-2);
+  --color-chip-text: var(--chip-text);
+  --color-chip-text-2: var(--chip-text-2);
 
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);

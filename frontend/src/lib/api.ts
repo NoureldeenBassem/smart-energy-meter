@@ -52,6 +52,17 @@ export async function loginUser(email: string, password: string): Promise<string
   return res.data.access_token;
 }
 
+/**
+ * Fallback for a session that logged in before the auth page started saving
+ * user_email to localStorage — Settings calls this only when the local copy
+ * is missing, so a returning account backfills its real email instead of
+ * showing the placeholder forever.
+ */
+export async function fetchCurrentUserEmail(): Promise<string> {
+  const res = await apiClient.get("/auth/me");
+  return res.data.email;
+}
+
 // ---------------------------------------------------------------------------
 // Response types.
 //
